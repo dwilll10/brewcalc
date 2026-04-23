@@ -1,0 +1,318 @@
+BrewCalc Equipment Procurement List
+====================================
+1.75 Gallon Small-Batch Extract Brewing Setup
+
+Budget: $300-$500 (all items including optional)
+
+
+BREWING EQUIPMENT
+-----------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+3-Gallon Stainless Kettle     $35-$45        Amazon (Bayou Classic 800-308, Concord 3-Gal)
+ w/ Lid & Thermometer                        MoreBeer.com
+                                             Northern Brewer (northernbrewer.com)
+
+Mesh Grain Bag (nylon,        $5-$8          Amazon (Brew Bag, multiple packs)
+ fits 3-gal kettle)                          MoreBeer.com
+                                             Your local homebrew shop (LHBS)
+
+21" Stainless Stir Spoon      $8-$10         Amazon
+ or Brew Paddle                              MoreBeer.com
+                                             Bed Bath & Beyond / kitchen stores
+
+Digital Kitchen Scale          $12-$15       Amazon (Etekcity 0.1g resolution)
+ (0.1g resolution)                           Walmart
+                                             Target
+
+Hydrometer + Test Jar         $12-$15        Amazon (Brewer's Elite Hydrometer Kit)
+                                             Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+Mini Auto-Siphon (3/8")       $12-$15        Amazon (Fermtech Mini Auto-Siphon)
+ + 4ft Silicone Tubing                       Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+Turkey Baster or Wine Thief   $5-$8          Amazon
+ (for hydrometer samples)                    MoreBeer.com
+                                             Kitchen supply stores
+
+Hop Bags (reusable,           $5-$7          Amazon (muslin or nylon, pack of 10)
+ muslin or nylon)                            Northern Brewer
+                                             Your LHBS
+
+Heat-Resistant Gloves         $10-$15        Amazon
+ or Long Tongs                               Home Depot / Lowe's
+                                             Kitchen supply stores
+
+Subtotal (Brewing):           $104-$138
+
+
+FERMENTATION EQUIPMENT
+----------------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+2-Gallon PET Carboy           $15-$18        Amazon (Fermonster 2-Gal)
+ (Fermonster) or Glass Jug                   Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+S-Type Airlock +              $4-$6          Amazon (combo pack)
+ Drilled Rubber Stopper                      Northern Brewer
+ (#6.5)                                      MoreBeer.com
+
+Blow-Off Tube (3/8"           $5-$7          Amazon
+ silicone tubing) +                          Northern Brewer
+ Mason Jar                                   Your LHBS + grocery store
+
+2nd Fermenter (optional,      $15-$18        Same as primary fermenter above
+ for secondary/clearing)
+
+2-Gallon Bottling Bucket      $10-$12        Amazon
+ w/ Spigot                                   Northern Brewer
+                                             MoreBeer.com
+
+Subtotal (Fermentation):      $49-$61
+
+
+TEMPERATURE CONTROL (RASPBERRY PI)
+-----------------------------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+Raspberry Pi 4 Model B       $35-$45         Amazon
+ (2GB RAM)                                   Adafruit (adafruit.com)
+                                             SparkFun (sparkfun.com)
+                                             Micro Center (in-store)
+                                             PiShop.us
+
+32GB MicroSD Card             $8-$10         Amazon (SanDisk)
+                                             Micro Center
+                                             Best Buy
+
+DS18B20 Waterproof            $4-$6          Amazon (pre-wired probe, 1m cable)
+ Temperature Probe                           Adafruit
+                                             SparkFun
+
+4.7k Ohm Resistor             $0.10-$1       Amazon (assorted pack)
+ (1/4W, pull-up for 1-Wire)                  Adafruit
+                                             SparkFun
+                                             DigiKey (digikey.com)
+
+2-Channel Relay Module        $6-$8          Amazon (SRD-05VDC, opto-isolated)
+ (5V, opto-isolated)                         Adafruit
+                                             SparkFun
+
+FermWrap Heater or            $15-$22        Amazon (FermWrap)
+ Brew Belt (25-40W)                          Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+USB Fan (80mm, 5V)            $8-$10         Amazon
+ for cooling assist                          Micro Center
+
+Insulated Fermentation        $5-$10         Home Depot (styrofoam cooler)
+ Chamber (DIY: styrofoam                     Walmart
+ cooler + reflective                         Hardware stores
+ insulation)
+
+Jumper Wires, Breadboard,     $5-$8          Amazon (starter kit)
+ Barrel Jack                                 Adafruit
+                                             SparkFun
+
+Raspberry Pi Power Supply     $8-$10         Amazon (official USB-C 5V/3A)
+ (USB-C, 5V 3A)                              Adafruit
+                                             PiShop.us
+
+Subtotal (Temp Control):      $94-$130
+
+
+CLEANING & SANITIZATION
+------------------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+Star San (8 oz)               $10-$12        Amazon
+                                             Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+PBW Cleaner (1 lb)            $8-$10         Amazon
+ or OxiClean Free                            Northern Brewer
+                                             MoreBeer.com
+                                             OxiClean Free at Walmart/Target
+
+Spray Bottle (32 oz)          $2-$3          Amazon
+                                             Dollar store
+                                             Walmart
+
+Bottle Brush                  $5-$7          Amazon
+                                             Northern Brewer
+                                             Kitchen supply stores
+
+Subtotal (Cleaning):          $25-$32
+
+
+SERVING - BOTTLING (STARTER OPTION)
+-------------------------------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+Wing Capper                   $15-$18        Amazon
+                                             Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+Crown Caps (144 count)        $5-$7          Amazon
+                                             Northern Brewer
+                                             MoreBeer.com
+
+12oz Amber Bottles (24 pk)    $12-$15        Amazon
+ or save/reuse pry-off                       Northern Brewer
+ commercial bottles                          MoreBeer.com
+                                             Save your own (free!)
+
+Priming Sugar                 $3-$5          Amazon (corn sugar / dextrose)
+ (corn sugar, 5 oz bag)                      Northern Brewer
+                                             Your LHBS
+
+Subtotal (Bottling):          $35-$45
+
+
+SERVING - MINI KEG (UPGRADE OPTION)
+-------------------------------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+iKegger 7L (1.75 gal)        $50-$65        Amazon
+ Stainless Mini Keg                          ikegger.com (direct)
+ w/ Ball-Lock Posts
+
+Mini CO2 Regulator            $25-$30        Amazon
+ (for 16g cartridges)                        ikegger.com
+                                             Northern Brewer
+
+16g CO2 Cartridges            $10-$15        Amazon (pack of 10)
+ (threaded)                                  ikegger.com
+                                             MoreBeer.com
+
+Picnic Tap / Beer Line        $8-$10         Amazon
+                                             Northern Brewer
+                                             MoreBeer.com
+
+Subtotal (Mini Keg):          $93-$120
+
+
+OPTIONAL EQUIPMENT
+-------------------
+
+Item                          Approx Price   Where to Buy
+----                          ------------   ------------
+Wort Chiller (immersion,      $25-$35        Amazon (NY Brew Supply, 3/8" x 20ft copper)
+ copper coil, 20ft)                          Northern Brewer
+                                             MoreBeer.com
+                                             Your LHBS
+
+Refractometer (Brix)          $20-$25        Amazon (handheld, ATC)
+ faster than hydrometer,                     Northern Brewer
+ needs only a few drops                      MoreBeer.com
+
+Fermentation Temperature      $8-$10         Amazon (stick-on LCD strip)
+ Strip (stick-on)                            Northern Brewer
+ backup to DS18B20 sensor                    Your LHBS
+
+pH Test Strips or             $10-$15        Amazon
+ Digital pH Meter                            Northern Brewer
+                                             MoreBeer.com
+
+Oxygen Aeration Kit           $15-$20        Amazon
+ (diffusion stone +                          Northern Brewer
+ aquarium pump)                              MoreBeer.com
+
+Solid State Relay (SSR)       $8-$12         Amazon
+ silent alternative to                       Adafruit
+ mechanical relay                            SparkFun
+
+Raspberry Pi Case             $8-$12         Amazon
+ (with GPIO access)                          Adafruit
+                                             PiShop.us
+
+Project Enclosure Box         $8-$12         Amazon
+ (for relay wiring,                          Home Depot
+ mains safety)                               Adafruit
+
+Subtotal (Optional):          $102-$141
+
+
+BUDGET SUMMARY
+===============
+
+                              Low      High
+                              ----     ----
+Brewing Equipment             $104     $138
+Fermentation Equipment         $49      $61
+Temperature Control (Pi)       $94     $130
+Cleaning & Sanitization        $25      $32
+Serving - Bottling             $35      $45
+                              ----     ----
+ESSENTIAL TOTAL               $307     $406
+
+Serving - Mini Keg Upgrade     $93     $120
+Optional Equipment            $102     $141
+                              ----     ----
+EVERYTHING TOTAL              $502     $667
+
+
+RECOMMENDED RETAILERS
+======================
+
+Online Homebrew Shops:
+  - Northern Brewer         northernbrewer.com        Wide selection, good kits, fast shipping
+  - MoreBeer                morebeer.com              Great prices, bulk ingredients, free shipping over $59
+  - Adventures in Homebrewing  homebrewing.org        Competitive pricing, good sales
+  - Midwest Supplies        midwestsupplies.com       Beginner-friendly, owned by Northern Brewer
+
+Electronics / Raspberry Pi:
+  - Adafruit                adafruit.com              Best tutorials and documentation for Pi projects
+  - SparkFun                sparkfun.com              Good sensor/relay selection, learning resources
+  - PiShop.us               pishop.us                 Pi-specific retailer, usually in stock
+  - Micro Center            microcenter.com           Great in-store prices on Pi and SD cards
+
+General / Amazon Alternatives:
+  - Amazon                  amazon.com                Fastest shipping, widest selection, compare prices
+  - Walmart                 walmart.com               OxiClean, scales, basic kitchen items
+  - Home Depot / Lowe's     homedepot.com             Styrofoam coolers, insulation, project boxes
+
+Local Homebrew Shop (LHBS):
+  - Find yours at homebrewersassociation.org/find-a-homebrew-supply-shop
+  - Benefits: hands-on advice, can inspect equipment, often have fresh yeast
+    and bulk grains, and support local business
+
+
+NOTES
+======
+
+1. Start with bottling for serving — it's cheaper and simpler. Upgrade to the
+   mini keg after your first few successful batches.
+
+2. The wort chiller is optional at 1.75 gallons. An ice bath (sink full of ice
+   water) cools the small volume in 15-20 minutes. A chiller is faster and
+   worth it if you plan to scale up to 5-gallon batches.
+
+3. Save pry-off commercial beer bottles (NOT twist-off) — rinse them after
+   drinking and you get free bottles. Brown glass is best for UV protection.
+
+4. The Raspberry Pi setup can wait until your second or third brew. Use a
+   simple stick-on temperature strip and manual monitoring for your first batch
+   to learn the process before automating.
+
+5. Star San is a no-rinse sanitizer — mix 1 oz per 5 gallons of water. Keep a
+   spray bottle of it handy. It lasts months in a sealed container. If in doubt,
+   sanitize it.
+
+6. Buy ingredients per recipe rather than stocking up. Liquid malt extract and
+   yeast have limited shelf life. Hops should be stored in the freezer.
