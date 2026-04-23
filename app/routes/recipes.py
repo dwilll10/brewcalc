@@ -267,6 +267,64 @@ def api_calculate(recipe_id):
     return _recipe_stats_json(recipe)
 
 
+@bp.route("/api/recipes/<int:recipe_id>/scale", methods=["POST"])
+def api_scale_recipe(recipe_id):
+    """Scale all ingredient amounts to a new batch size.
+
+    JSON body:
+        new_batch_size: float (gallons)
+    """
+    recipe = Recipe.query.get_or_404(recipe_id)
+    data = request.get_json()
+    new_size = float(data["new_batch_size"])
+
+    if new_size <= 0 or recipe.batch_size <= 0:
+        return jsonify({"error": "Invalid batch size"}), 400
+
+    ratio = new_size / recipe.batch_size
+
+    for rf in recipe.fermentables:
+        rf.amount_oz = round(rf.amount_oz * ratio, 2)
+
+    for rh in recipe.hops:
+        rh.amount_oz = round(rh.amount_oz * ratio, 2)
+
+    recipe.batch_size = new_size
+    _recalculate(recipe)
+    db.session.commit()
+    return _recipe_stats_json(recipe)
+
+
+@bp.route("/api/recipes/<int:recipe_id>/ferm_profile", methods=["GET"])
+def api_get_ferm_profile(recipe_id):
+    """Get the fermentation profile for a recipe."""
+    recipe = Recipe.query.get_or_404(recipe_id)
+    profile = []
+    if recipe.ferm_profile:
+        try:
+            profile = json.loads(recipe.ferm_profile)
+        except json.JSONDecodeError:
+            pass
+    return jsonify({"profile": profile})
+
+
+@bp.route("/api/recipes/<int:recipe_id>/ferm_profile", methods=["PUT"])
+def api_update_ferm_profile(recipe_id):
+    """Update the fermentation profile for a recipe.
+
+    JSON body:
+        profile: list of {hours: float, temp_f: float} waypoints
+    """
+    recipe = Recipe.query.get_or_404(recipe_id)
+    data = request.get_json()
+    profile = data.get("profile", [])
+    # Sort by hours and validate
+    profile = sorted(profile, key=lambda w: w.get("hours", 0))
+    recipe.ferm_profile = json.dumps(profile)
+    db.session.commit()
+    return jsonify({"profile": profile})
+
+
 def _recipe_stats_json(recipe):
     """Return recipe stats + ingredient lists as JSON."""
     style = recipe.style

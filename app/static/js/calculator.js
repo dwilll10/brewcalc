@@ -44,6 +44,217 @@ async function apiCall(url, method, body) {
     return data;
 }
 
+// Raw fetch that doesn't call updateStats (for profile endpoints)
+async function apiRaw(url, method, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    return await res.json();
+}
+
+// ============================
+// Fermentation Profile Editor
+// ============================
+
+let profileChart = null;
+let profileWaypoints = [];
+let profileRecipeId = null;
+
+function initProfileEditor(recipeId) {
+    profileRecipeId = recipeId;
+
+    // Initialize chart
+    const ctx = document.getElementById('profile-chart').getContext('2d');
+    profileChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Target Temp',
+                data: [],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 2,
+                pointRadius: 6,
+                pointBackgroundColor: '#dc3545',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 8,
+                fill: true,
+                tension: 0,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Day' },
+                },
+                y: {
+                    title: { display: true, text: 'Temperature (°F)' },
+                    suggestedMin: 58,
+                    suggestedMax: 78,
+                },
+            },
+            plugins: {
+                legend: { display: false },
+            },
+        },
+    });
+
+    // Load existing profile
+    loadProfile();
+
+    // Add waypoint button
+    document.getElementById('add-waypoint-btn').addEventListener('click', () => {
+        // Default: add a waypoint 24h after the last one
+        const lastHour = profileWaypoints.length > 0
+            ? profileWaypoints[profileWaypoints.length - 1].hours + 24
+            : 0;
+        const lastTemp = profileWaypoints.length > 0
+            ? profileWaypoints[profileWaypoints.length - 1].temp_f
+            : 66;
+        profileWaypoints.push({ hours: lastHour, temp_f: lastTemp });
+        saveAndRenderProfile();
+    });
+
+    // Preset buttons
+    document.querySelectorAll('.profile-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+            profileWaypoints = JSON.parse(btn.dataset.profile);
+            saveAndRenderProfile();
+        });
+    });
+}
+
+async function loadProfile() {
+    const data = await apiRaw(`/api/recipes/${profileRecipeId}/ferm_profile`, 'GET');
+    profileWaypoints = data.profile || [];
+    if (profileWaypoints.length === 0) {
+        profileWaypoints = [{ hours: 0, temp_f: 66 }];
+    }
+    renderProfile();
+}
+
+function renderProfile() {
+    // Sort waypoints
+    profileWaypoints.sort((a, b) => a.hours - b.hours);
+
+    // Update chart
+    // Generate interpolated points for a smooth line, plus mark actual waypoints
+    const labels = [];
+    const data = [];
+
+    if (profileWaypoints.length > 0) {
+        const maxHours = Math.max(profileWaypoints[profileWaypoints.length - 1].hours + 24, 48);
+        for (let h = 0; h <= maxHours; h += 2) {
+            labels.push(`Day ${(h / 24).toFixed(1)}`);
+            data.push(interpolateTemp(h));
+        }
+    }
+
+    profileChart.data.labels = labels;
+    profileChart.data.datasets[0].data = data;
+
+    // Mark actual waypoint positions with larger points
+    const pointRadii = labels.map((_, i) => {
+        const hour = i * 2;
+        return profileWaypoints.some(w => Math.abs(w.hours - hour) < 1) ? 6 : 0;
+    });
+    profileChart.data.datasets[0].pointRadius = pointRadii;
+    profileChart.update('none');
+
+    // Update waypoint table
+    const tbody = document.getElementById('waypoints-list');
+    tbody.innerHTML = profileWaypoints.map((w, i) => {
+        const day = (w.hours / 24).toFixed(1);
+        let desc = '';
+        if (i === 0) desc = 'Start';
+        else if (i > 0 && w.temp_f === profileWaypoints[i - 1].temp_f) desc = 'Hold';
+        else if (i > 0 && w.temp_f > profileWaypoints[i - 1].temp_f) desc = 'Ramp up';
+        else if (i > 0 && w.temp_f < profileWaypoints[i - 1].temp_f) desc = 'Ramp down';
+
+        return `<tr>
+            <td class="text-muted small">${day}</td>
+            <td><input type="number" class="form-control form-control-sm wp-hours" data-index="${i}" value="${w.hours}" step="6" min="0"></td>
+            <td><input type="number" class="form-control form-control-sm wp-temp" data-index="${i}" value="${w.temp_f}" step="0.5" min="50" max="85"></td>
+            <td class="text-muted small">${desc}</td>
+            <td>${profileWaypoints.length > 1 ? `<button class="btn btn-sm btn-outline-danger wp-delete" data-index="${i}">&times;</button>` : ''}</td>
+        </tr>`;
+    }).join('');
+
+    // Wire up waypoint inputs
+    wireUpWaypoints();
+}
+
+function wireUpWaypoints() {
+    let timer;
+
+    document.querySelectorAll('.wp-hours').forEach(input => {
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const idx = parseInt(input.dataset.index);
+                profileWaypoints[idx].hours = parseFloat(input.value) || 0;
+                saveAndRenderProfile();
+            }, 500);
+        });
+    });
+
+    document.querySelectorAll('.wp-temp').forEach(input => {
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const idx = parseInt(input.dataset.index);
+                profileWaypoints[idx].temp_f = parseFloat(input.value) || 66;
+                saveAndRenderProfile();
+            }, 500);
+        });
+    });
+
+    document.querySelectorAll('.wp-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.index);
+            profileWaypoints.splice(idx, 1);
+            saveAndRenderProfile();
+        });
+    });
+}
+
+async function saveAndRenderProfile() {
+    profileWaypoints.sort((a, b) => a.hours - b.hours);
+    await apiRaw(`/api/recipes/${profileRecipeId}/ferm_profile`, 'PUT', {
+        profile: profileWaypoints,
+    });
+    renderProfile();
+}
+
+function interpolateTemp(hours) {
+    if (!profileWaypoints.length) return 66;
+
+    if (hours <= profileWaypoints[0].hours) return profileWaypoints[0].temp_f;
+    if (hours >= profileWaypoints[profileWaypoints.length - 1].hours)
+        return profileWaypoints[profileWaypoints.length - 1].temp_f;
+
+    for (let i = 0; i < profileWaypoints.length - 1; i++) {
+        const w1 = profileWaypoints[i];
+        const w2 = profileWaypoints[i + 1];
+        if (hours >= w1.hours && hours <= w2.hours) {
+            const span = w2.hours - w1.hours;
+            if (span === 0) return w2.temp_f;
+            const frac = (hours - w1.hours) / span;
+            return w1.temp_f + frac * (w2.temp_f - w1.temp_f);
+        }
+    }
+    return profileWaypoints[profileWaypoints.length - 1].temp_f;
+}
+
+
+// ============================
+// Builder Init
+// ============================
+
 function initBuilder(recipeId) {
     const base = `/api/recipes/${recipeId}`;
 
@@ -51,14 +262,17 @@ function initBuilder(recipeId) {
     let settingsTimer;
     function updateSettings() {
         clearTimeout(settingsTimer);
-        settingsTimer = setTimeout(() => {
-            apiCall(`${base}/update`, 'POST', {
+        settingsTimer = setTimeout(async () => {
+            const data = await apiCall(`${base}/update`, 'POST', {
                 style_id: document.getElementById('style-select').value || null,
                 yeast_id: document.getElementById('yeast-select').value || null,
                 batch_size: parseFloat(document.getElementById('batch-size').value),
                 boil_time: parseInt(document.getElementById('boil-time').value),
                 efficiency: parseFloat(document.getElementById('efficiency').value),
             });
+            // Keep scale current label in sync
+            document.getElementById('scale-current').textContent =
+                parseFloat(document.getElementById('batch-size').value) + ' gal';
         }, 400);
     }
 
@@ -101,6 +315,31 @@ function initBuilder(recipeId) {
         rebuildAdjuncts(data.adjuncts, base);
     });
 
+    // Batch scaling
+    document.getElementById('scale-btn').addEventListener('click', async () => {
+        const newSize = parseFloat(document.getElementById('scale-target').value);
+        const currentSize = parseFloat(document.getElementById('batch-size').value);
+        if (!newSize || newSize <= 0) return;
+        if (newSize === currentSize) return;
+
+        if (!confirm(`Scale recipe from ${currentSize} gal to ${newSize} gal? All ingredient amounts will be adjusted.`)) return;
+
+        const data = await apiCall(`${base}/scale`, 'POST', { new_batch_size: newSize });
+        rebuildFermentables(data.fermentables, base);
+        rebuildHops(data.hops, base);
+        // Update batch size input and scale label
+        document.getElementById('batch-size').value = newSize;
+        document.getElementById('scale-current').textContent = newSize + ' gal';
+        document.getElementById('scale-target').value = newSize;
+    });
+
+    // Scale presets
+    document.querySelectorAll('.scale-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('scale-target').value = btn.dataset.size;
+        });
+    });
+
     // Wire up existing rows
     wireUpFermentables(base);
     wireUpHops(base);
@@ -108,6 +347,9 @@ function initBuilder(recipeId) {
 
     // Initial stats load
     apiCall(`${base}/calculate`, 'GET');
+
+    // Initialize profile editor
+    initProfileEditor(recipeId);
 }
 
 function wireUpFermentables(base) {

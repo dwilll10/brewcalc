@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ recipe.name }} - Builder - BrewCalc{% endblock %}
 
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 id="recipe-name" class="mb-0">{{ recipe.name }}</h1>
@@ -214,6 +218,88 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Batch Scaling -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Scale Recipe</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">Scale all ingredient amounts to a different batch size. This updates the actual recipe — all fermentable and hop amounts will be adjusted proportionally.</p>
+        <div class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label class="form-label">Current</label>
+                <div class="form-control form-control-sm bg-body-secondary" id="scale-current" style="width: 100px">{{ recipe.batch_size }} gal</div>
+            </div>
+            <div class="col-auto d-flex align-items-center pt-4">
+                &rarr;
+            </div>
+            <div class="col-auto">
+                <label class="form-label">New Size (gal)</label>
+                <input type="number" class="form-control form-control-sm" id="scale-target" step="0.25" min="0.5" max="15" value="{{ recipe.batch_size }}" style="width: 100px">
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-sm btn-warning" id="scale-btn">Scale Recipe</button>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-secondary scale-preset" data-size="1">1 gal</button>
+                    <button class="btn btn-outline-secondary scale-preset" data-size="1.75">1.75 gal</button>
+                    <button class="btn btn-outline-secondary scale-preset" data-size="2.5">2.5 gal</button>
+                    <button class="btn btn-outline-secondary scale-preset" data-size="5">5 gal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fermentation Profile -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Fermentation Profile</h5>
+        <button class="btn btn-sm btn-primary" id="add-waypoint-btn">Add Waypoint</button>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">Define a temperature schedule for fermentation. The controller will interpolate between waypoints and ramp temperature gradually.</p>
+
+        <!-- Profile Chart -->
+        <div class="mb-3" style="height: 200px">
+            <canvas id="profile-chart"></canvas>
+        </div>
+
+        <!-- Waypoint Table -->
+        <table class="table table-sm mb-3">
+            <thead>
+                <tr>
+                    <th style="width: 50px">Day</th>
+                    <th style="width: 80px">Hour</th>
+                    <th style="width: 100px">Temp (F)</th>
+                    <th>Description</th>
+                    <th style="width: 50px"></th>
+                </tr>
+            </thead>
+            <tbody id="waypoints-list">
+            </tbody>
+        </table>
+
+        <!-- Preset Profiles -->
+        <div class="d-flex gap-2 flex-wrap">
+            <span class="text-muted small align-self-center">Presets:</span>
+            <button class="btn btn-sm btn-outline-secondary profile-preset" data-profile='[{"hours":0,"temp_f":66},{"hours":72,"temp_f":66},{"hours":96,"temp_f":70},{"hours":120,"temp_f":72}]'>
+                Standard Ale (66F)
+            </button>
+            <button class="btn btn-sm btn-outline-secondary profile-preset" data-profile='[{"hours":0,"temp_f":64},{"hours":96,"temp_f":64},{"hours":120,"temp_f":68},{"hours":168,"temp_f":68}]'>
+                Stout/Porter (64F)
+            </button>
+            <button class="btn btn-sm btn-outline-secondary profile-preset" data-profile='[{"hours":0,"temp_f":68},{"hours":48,"temp_f":68},{"hours":72,"temp_f":72},{"hours":96,"temp_f":72}]'>
+                Quick Ale (68F)
+            </button>
+            <button class="btn btn-sm btn-outline-secondary profile-preset" data-profile='[{"hours":0,"temp_f":62},{"hours":48,"temp_f":62},{"hours":72,"temp_f":66},{"hours":120,"temp_f":70},{"hours":168,"temp_f":70}]'>
+                Cold Start Ramp
+            </button>
+        </div>
     </div>
 </div>
 {% endblock %}
