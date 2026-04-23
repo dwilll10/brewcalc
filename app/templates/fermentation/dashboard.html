@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Fermentation: {{ recipe.name }} - BrewCalc{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+    .indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+    .indicator.on { background-color: #dc3545; animation: pulse 1s infinite; }
+    .indicator.off { background-color: #6c757d; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Fermentation: {{ recipe.name }}</h1>
+    <div>
+        <a href="{{ url_for('recipes.detail', recipe_id=recipe.id) }}" class="btn btn-outline-secondary btn-sm">Back to Recipe</a>
+    </div>
+</div>
+
+{% if status.get('offline') %}
+<div class="alert alert-warning">
+    Fermentation controller is offline. Make sure the Raspberry Pi is running and connected to your network.
+</div>
+{% endif %}
+
+<!-- Status Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-auto">
+        <div class="card text-center" style="min-width: 110px">
+            <div class="card-body py-2">
+                <div class="text-muted small">Current</div>
+                <div class="fw-bold fs-4" id="current-temp">{{ '%.1f'|format(status.current_temp or 0) if status.current_temp else '--' }}</div>
+                <div class="small text-muted">&deg;F</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-auto">
+        <div class="card text-center" style="min-width: 110px">
+            <div class="card-body py-2">
+                <div class="text-muted small">Target</div>
+                <div class="fw-bold fs-4" id="target-temp">{{ '%.1f'|format(status.target_temp or 0) if status.target_temp else '--' }}</div>
+                <div class="small text-muted">&deg;F</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-auto">
+        <div class="card text-center" style="min-width: 110px">
+            <div class="card-body py-2">
+                <div class="text-muted small">Elapsed</div>
+                <div class="fw-bold fs-4" id="elapsed">{{ '%.1f'|format(status.elapsed_hours or 0) }}</div>
+                <div class="small text-muted">hours</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-auto">
+        <div class="card text-center" style="min-width: 80px">
+            <div class="card-body py-2">
+                <div class="text-muted small">Heat</div>
+                <div class="mt-2"><span class="indicator {{ 'on' if status.heat_on else 'off' }}" id="heat-ind"></span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-auto">
+        <div class="card text-center" style="min-width: 80px">
+            <div class="card-body py-2">
+                <div class="text-muted small">Cool</div>
+                <div class="mt-2"><span class="indicator {{ 'on' if status.cool_on else 'off' }}" id="cool-ind"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Controls -->
+<div class="row g-3 mb-4">
+    <div class="col-auto">
+        {% if status.active and status.run_id %}
+        <button class="btn btn-danger" id="stop-btn" onclick="stopFermentation({{ status.run_id }})">Stop Fermentation</button>
+        {% else %}
+        <button class="btn btn-success" id="start-btn" onclick="startFermentation()">Start Fermentation</button>
+        {% endif %}
+    </div>
+    <div class="col-auto">
+        <div class="input-group">
+            <input type="number" class="form-control" id="override-temp" placeholder="Override temp" step="0.5" min="50" max="85" style="width: 140px">
+            <button class="btn btn-warning" onclick="setOverride()">Override</button>
+            <button class="btn btn-outline-secondary" onclick="clearOverride()">Clear</button>
+        </div>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="card mb-4">
+    <div class="card-header">Temperature History</div>
+    <div class="card-body">
+        <canvas id="temp-chart" height="300"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const recipeId = {{ recipe.id }};
+let chart = null;
+
+function initChart() {
+    const ctx = document.getElementById('temp-chart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                { label: 'Actual', data: [], borderColor: '#0d6efd', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3 },
+                { label: 'Target', data: [], borderColor: '#dc3545', borderWidth: 2, borderDash: [5,5], pointRadius: 0, fill: false },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { y: { suggestedMin: 58, suggestedMax: 78, title: { display: true, text: '°F' } } },
+            plugins: { legend: { position: 'top' } },
+        },
+    });
+}
+
+async function pollStatus() {
+    try {
+        const res = await fetch('/fermentation/api/status');
+        const s = await res.json();
+        if (s.offline) return;
+
+        document.getElementById('current-temp').textContent = s.current_temp ? s.current_temp.toFixed(1) : '--';
+        document.getElementById('target-temp').textContent = s.target_temp ? s.target_temp.toFixed(1) : '--';
+        document.getElementById('elapsed').textContent = s.elapsed_hours ? s.elapsed_hours.toFixed(1) : '--';
+        document.getElementById('heat-ind').className = 'indicator ' + (s.heat_on ? 'on' : 'off');
+        document.getElementById('cool-ind').className = 'indicator ' + (s.cool_on ? 'on' : 'off');
+
+        if (s.active && s.run_id) {
+            const rRes = await fetch(`/fermentation/api/readings?run_id=${s.run_id}`);
+            const readings = await rRes.json();
+            if (readings.length && chart) {
+                const step = Math.max(1, Math.ceil(readings.length / 500));
+                const data = readings.filter((_, i) => i % step === 0);
+                chart.data.labels = data.map(r => new Date(r.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+                chart.data.datasets[0].data = data.map(r => r.temp_f);
+                chart.data.datasets[1].data = data.map(r => r.target_f);
+                chart.update('none');
+            }
+        }
+    } catch (e) { /* offline */ }
+}
+
+async function startFermentation() {
+    await fetch('/fermentation/api/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ recipe_id: recipeId }),
+    });
+    location.reload();
+}
+
+async function stopFermentation(runId) {
+    if (!confirm('Stop fermentation?')) return;
+    await fetch('/fermentation/api/stop', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ run_id: runId }),
+    });
+    location.reload();
+}
+
+async function setOverride() {
+    const temp = parseFloat(document.getElementById('override-temp').value);
+    if (isNaN(temp)) return;
+    await fetch('/fermentation/api/override', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ temp_f: temp }),
+    });
+    pollStatus();
+}
+
+async function clearOverride() {
+    await fetch('/fermentation/api/override', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ temp_f: null }),
+    });
+    pollStatus();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initChart();
+    pollStatus();
+    setInterval(pollStatus, 15000);
+});
+</script>
+{% endblock %}

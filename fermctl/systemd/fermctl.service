@@ -1,0 +1,19 @@
+[Unit]
+Description=FermCtl Fermentation Temperature Controller
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/brewcalc/fermctl
+ExecStart=/usr/bin/python3 /home/pi/brewcalc/fermctl/run.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Safety: stop relays on service failure
+ExecStopPost=/usr/bin/python3 -c "from fermctl.relay import all_off; all_off()"
+
+[Install]
+WantedBy=multi-user.target
