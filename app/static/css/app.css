@@ -1,0 +1,26 @@
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#stats-bar .card {
+    min-width: 90px;
+}
+
+#stats-bar .card-body {
+    padding: 0.5rem;
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.form-control-sm, .form-select-sm {
+    font-size: 0.85rem;
+}

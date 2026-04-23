@@ -1,0 +1,87 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_title %}Fermentables{% endblock %}
+
+{% block admin_content %}
+<!-- Add form -->
+<div class="card mb-4">
+    <div class="card-header">Add Fermentable</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.add_fermentable') }}" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control form-control-sm" name="name" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Type</label>
+                <select class="form-select form-select-sm" name="type">
+                    <option value="extract_liquid">Liquid Extract</option>
+                    <option value="extract_dry">Dry Extract</option>
+                    <option value="grain">Grain</option>
+                    <option value="sugar">Sugar</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">PPG</label>
+                <input type="number" class="form-control form-control-sm" name="ppg" step="1" value="36" required>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">SRM</label>
+                <input type="number" class="form-control form-control-sm" name="srm" step="0.5" value="4" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Notes</label>
+                <input type="text" class="form-control form-control-sm" name="notes">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- List -->
+<div class="table-responsive">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>PPG</th>
+                <th>SRM</th>
+                <th>Notes</th>
+                <th style="width: 140px">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <form method="POST" action="{{ url_for('admin.edit_fermentable', item_id=item.id) }}">
+                    <td><input type="text" class="form-control form-control-sm" name="name" value="{{ item.name }}"></td>
+                    <td>
+                        <select class="form-select form-select-sm" name="type">
+                            <option value="extract_liquid" {{ 'selected' if item.type == 'extract_liquid' }}>Liquid Extract</option>
+                            <option value="extract_dry" {{ 'selected' if item.type == 'extract_dry' }}>Dry Extract</option>
+                            <option value="grain" {{ 'selected' if item.type == 'grain' }}>Grain</option>
+                            <option value="sugar" {{ 'selected' if item.type == 'sugar' }}>Sugar</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm" name="ppg" value="{{ item.ppg }}" step="1"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="srm" value="{{ item.srm }}" step="0.5"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="notes" value="{{ item.notes or '' }}"></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                </form>
+                            <form method="POST" action="{{ url_for('admin.delete_fermentable', item_id=item.id) }}"
+                                  onsubmit="return confirm('Delete {{ item.name }}?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Del</button>
+                            </form>
+                        </div>
+                    </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p class="text-muted small">{{ items|length }} fermentables</p>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.name }} - Builder - BrewCalc{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 id="recipe-name" class="mb-0">{{ recipe.name }}</h1>
+    <div>
+        <a href="{{ url_for('recipes.detail', recipe_id=recipe.id) }}" class="btn btn-outline-secondary btn-sm">View Details</a>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="row g-2 mb-4" id="stats-bar">
+    <div class="col">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="text-muted small">OG</div>
+                <div class="fw-bold fs-5" id="stat-og">{{ '%.3f'|format(recipe.og or 1.0) }}</div>
+                <div class="small" id="stat-og-range"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="text-muted small">FG</div>
+                <div class="fw-bold fs-5" id="stat-fg">{{ '%.3f'|format(recipe.fg or 1.0) }}</div>
+                <div class="small" id="stat-fg-range"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="text-muted small">ABV</div>
+                <div class="fw-bold fs-5" id="stat-abv">{{ '%.1f'|format(recipe.abv or 0) }}%</div>
+                <div class="small" id="stat-abv-range"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="text-muted small">IBU</div>
+                <div class="fw-bold fs-5" id="stat-ibu">{{ '%.0f'|format(recipe.ibu or 0) }}</div>
+                <div class="small" id="stat-ibu-range"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center">
+            <div class="card-body py-2">
+                <div class="text-muted small">SRM</div>
+                <div class="fw-bold fs-5" id="stat-srm">{{ '%.0f'|format(recipe.srm or 0) }}</div>
+                <div id="srm-swatch" class="rounded mt-1" style="height: 12px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recipe Settings -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Recipe Settings</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Style</label>
+                <select class="form-select form-select-sm" id="style-select">
+                    <option value="">-- None --</option>
+                    {% for style in styles %}
+                    <option value="{{ style.id }}" {{ 'selected' if recipe.style_id == style.id }}>{{ style.category }} {{ style.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Yeast</label>
+                <select class="form-select form-select-sm" id="yeast-select">
+                    <option value="">-- None --</option>
+                    {% for yeast in yeasts %}
+                    <option value="{{ yeast.id }}" {{ 'selected' if recipe.yeast_id == yeast.id }}>{{ yeast.code }} - {{ yeast.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Batch (gal)</label>
+                <input type="number" class="form-control form-control-sm" id="batch-size" value="{{ recipe.batch_size }}" step="0.25" min="0.5" max="15">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Boil (min)</label>
+                <input type="number" class="form-control form-control-sm" id="boil-time" value="{{ recipe.boil_time }}" step="5" min="15" max="120">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Efficiency</label>
+                <input type="number" class="form-control form-control-sm" id="efficiency" value="{{ recipe.efficiency }}" step="0.05" min="0.5" max="1.0">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fermentables -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Fermentables</h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="add-fermentable-select" style="width: auto">
+                {% for f in fermentables %}
+                <option value="{{ f.id }}">{{ f.name }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-primary" id="add-fermentable-btn">Add</button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Ingredient</th>
+                    <th style="width: 120px">Amount (oz)</th>
+                    <th style="width: 120px">Use</th>
+                    <th style="width: 50px"></th>
+                </tr>
+            </thead>
+            <tbody id="fermentables-list">
+                {% for rf in recipe.fermentables %}
+                <tr data-id="{{ rf.id }}">
+                    <td>{{ rf.fermentable.name }}</td>
+                    <td><input type="number" class="form-control form-control-sm ferm-amount" value="{{ rf.amount_oz }}" step="0.5" min="0.1"></td>
+                    <td>
+                        <select class="form-select form-select-sm ferm-use">
+                            <option value="boil" {{ 'selected' if rf.use == 'boil' }}>Boil</option>
+                            <option value="steep" {{ 'selected' if rf.use == 'steep' }}>Steep</option>
+                            <option value="late" {{ 'selected' if rf.use == 'late' }}>Late</option>
+                        </select>
+                    </td>
+                    <td><button class="btn btn-sm btn-outline-danger ferm-delete">&times;</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Hops -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Hops</h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="add-hop-select" style="width: auto">
+                {% for h in hops %}
+                <option value="{{ h.id }}">{{ h.name }} ({{ h.alpha_acid }}% AA)</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-primary" id="add-hop-btn">Add</button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Hop</th>
+                    <th style="width: 120px">Amount (oz)</th>
+                    <th style="width: 120px">Time (min)</th>
+                    <th style="width: 120px">Use</th>
+                    <th style="width: 50px"></th>
+                </tr>
+            </thead>
+            <tbody id="hops-list">
+                {% for rh in recipe.hops %}
+                <tr data-id="{{ rh.id }}">
+                    <td>{{ rh.hop.name }}</td>
+                    <td><input type="number" class="form-control form-control-sm hop-amount" value="{{ rh.amount_oz }}" step="0.25" min="0.1"></td>
+                    <td><input type="number" class="form-control form-control-sm hop-time" value="{{ rh.boil_time_min }}" step="5" min="0" max="120"></td>
+                    <td>
+                        <select class="form-select form-select-sm hop-use">
+                            <option value="boil" {{ 'selected' if rh.use == 'boil' }}>Boil</option>
+                            <option value="flameout" {{ 'selected' if rh.use == 'flameout' }}>Flameout</option>
+                            <option value="dryhop" {{ 'selected' if rh.use == 'dryhop' }}>Dry Hop</option>
+                        </select>
+                    </td>
+                    <td><button class="btn btn-sm btn-outline-danger hop-delete">&times;</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Adjuncts -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Adjuncts</h5>
+        <button class="btn btn-sm btn-primary" id="add-adjunct-btn">Add Adjunct</button>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th>When</th>
+                    <th style="width: 50px"></th>
+                </tr>
+            </thead>
+            <tbody id="adjuncts-list">
+                {% for adj in recipe.adjuncts %}
+                <tr data-id="{{ adj.id }}">
+                    <td>{{ adj.name }}</td>
+                    <td>{{ adj.amount }}</td>
+                    <td>{{ adj.add_time }}</td>
+                    <td><button class="btn btn-sm btn-outline-danger adj-delete">&times;</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+<script>
+    initBuilder({{ recipe.id }});
+</script>
+{% endblock %}

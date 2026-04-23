@@ -1,0 +1,127 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_title %}Styles{% endblock %}
+
+{% block admin_content %}
+<!-- Add form -->
+<div class="card mb-4">
+    <div class="card-header">Add Style</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.add_style') }}">
+            <div class="row g-2 mb-2">
+                <div class="col-md-4">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control form-control-sm" name="name" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-control form-control-sm" name="category" placeholder="e.g. 21A">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-control form-control-sm" name="description">
+                </div>
+            </div>
+            <div class="row g-2 align-items-end">
+                <div class="col">
+                    <label class="form-label">OG Lo</label>
+                    <input type="number" class="form-control form-control-sm" name="og_low" step="0.001" value="1.040" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">OG Hi</label>
+                    <input type="number" class="form-control form-control-sm" name="og_high" step="0.001" value="1.060" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">FG Lo</label>
+                    <input type="number" class="form-control form-control-sm" name="fg_low" step="0.001" value="1.008" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">FG Hi</label>
+                    <input type="number" class="form-control form-control-sm" name="fg_high" step="0.001" value="1.015" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">IBU Lo</label>
+                    <input type="number" class="form-control form-control-sm" name="ibu_low" value="25" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">IBU Hi</label>
+                    <input type="number" class="form-control form-control-sm" name="ibu_high" value="50" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">SRM Lo</label>
+                    <input type="number" class="form-control form-control-sm" name="srm_low" step="0.5" value="5" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">SRM Hi</label>
+                    <input type="number" class="form-control form-control-sm" name="srm_high" step="0.5" value="14" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">ABV Lo</label>
+                    <input type="number" class="form-control form-control-sm" name="abv_low" step="0.1" value="4.5" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">ABV Hi</label>
+                    <input type="number" class="form-control form-control-sm" name="abv_high" step="0.1" value="6.5" required>
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- List -->
+<div class="table-responsive">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>Cat.</th>
+                <th>Name</th>
+                <th>OG</th>
+                <th>FG</th>
+                <th>IBU</th>
+                <th>SRM</th>
+                <th>ABV</th>
+                <th>Description</th>
+                <th style="width: 140px">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <form method="POST" action="{{ url_for('admin.edit_style', item_id=item.id) }}">
+                    <td><input type="text" class="form-control form-control-sm" name="category" value="{{ item.category or '' }}" style="width: 50px"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="name" value="{{ item.name }}"></td>
+                    <td class="text-nowrap">
+                        <input type="number" class="form-control form-control-sm d-inline" name="og_low" value="{{ item.og_low }}" step="0.001" style="width: 70px">-<input type="number" class="form-control form-control-sm d-inline" name="og_high" value="{{ item.og_high }}" step="0.001" style="width: 70px">
+                    </td>
+                    <td class="text-nowrap">
+                        <input type="number" class="form-control form-control-sm d-inline" name="fg_low" value="{{ item.fg_low }}" step="0.001" style="width: 70px">-<input type="number" class="form-control form-control-sm d-inline" name="fg_high" value="{{ item.fg_high }}" step="0.001" style="width: 70px">
+                    </td>
+                    <td class="text-nowrap">
+                        <input type="number" class="form-control form-control-sm d-inline" name="ibu_low" value="{{ item.ibu_low }}" style="width: 50px">-<input type="number" class="form-control form-control-sm d-inline" name="ibu_high" value="{{ item.ibu_high }}" style="width: 50px">
+                    </td>
+                    <td class="text-nowrap">
+                        <input type="number" class="form-control form-control-sm d-inline" name="srm_low" value="{{ item.srm_low }}" step="0.5" style="width: 50px">-<input type="number" class="form-control form-control-sm d-inline" name="srm_high" value="{{ item.srm_high }}" step="0.5" style="width: 50px">
+                    </td>
+                    <td class="text-nowrap">
+                        <input type="number" class="form-control form-control-sm d-inline" name="abv_low" value="{{ item.abv_low }}" step="0.1" style="width: 50px">-<input type="number" class="form-control form-control-sm d-inline" name="abv_high" value="{{ item.abv_high }}" step="0.1" style="width: 50px">
+                    </td>
+                    <td><input type="text" class="form-control form-control-sm" name="description" value="{{ item.description or '' }}"></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                </form>
+                            <form method="POST" action="{{ url_for('admin.delete_style', item_id=item.id) }}"
+                                  onsubmit="return confirm('Delete {{ item.name }}?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Del</button>
+                            </form>
+                        </div>
+                    </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p class="text-muted small">{{ items|length }} styles</p>
+{% endblock %}

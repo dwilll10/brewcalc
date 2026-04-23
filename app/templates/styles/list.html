@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}BJCP Styles - BrewCalc{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">BJCP Style Guidelines</h1>
+
+<div class="table-responsive">
+    <table class="table table-hover table-sm">
+        <thead>
+            <tr>
+                <th>Cat.</th>
+                <th>Style</th>
+                <th>OG</th>
+                <th>FG</th>
+                <th>ABV</th>
+                <th>IBU</th>
+                <th>SRM</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for style in styles %}
+            <tr>
+                <td>{{ style.category }}</td>
+                <td class="fw-bold">{{ style.name }}</td>
+                <td>{{ '%.3f'|format(style.og_low) }}-{{ '%.3f'|format(style.og_high) }}</td>
+                <td>{{ '%.3f'|format(style.fg_low) }}-{{ '%.3f'|format(style.fg_high) }}</td>
+                <td>{{ style.abv_low }}-{{ style.abv_high }}%</td>
+                <td>{{ style.ibu_low }}-{{ style.ibu_high }}</td>
+                <td>
+                    <span class="d-inline-block rounded me-1" style="width: 12px; height: 12px; background-color: {{ srm_color(style.srm_low) }}"></span>
+                    {{ style.srm_low|int }}-{{ style.srm_high|int }}
+                </td>
+                <td class="text-muted small">{{ style.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

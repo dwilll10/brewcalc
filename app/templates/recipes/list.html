@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Recipes - BrewCalc{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Recipes</h1>
+    <a href="{{ url_for('recipes.new_recipe') }}" class="btn btn-primary">New Recipe</a>
+</div>
+
+{% if recipes %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Style</th>
+                <th>Batch</th>
+                <th>OG</th>
+                <th>FG</th>
+                <th>ABV</th>
+                <th>IBU</th>
+                <th>SRM</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recipe in recipes %}
+            <tr style="cursor: pointer" onclick="window.location='{{ url_for('recipes.detail', recipe_id=recipe.id) }}'">
+                <td class="fw-bold">{{ recipe.name }}</td>
+                <td>{{ recipe.style.name if recipe.style else '-' }}</td>
+                <td>{{ recipe.batch_size }} gal</td>
+                <td>{{ '%.3f'|format(recipe.og or 1.0) }}</td>
+                <td>{{ '%.3f'|format(recipe.fg or 1.0) }}</td>
+                <td>{{ '%.1f'|format(recipe.abv or 0) }}%</td>
+                <td>{{ '%.0f'|format(recipe.ibu or 0) }}</td>
+                <td>
+                    <span class="badge rounded-pill" style="background-color: {{ srm_color(recipe.srm or 0) }}; color: {{ 'white' if (recipe.srm or 0) > 15 else 'black' }}">
+                        {{ '%.0f'|format(recipe.srm or 0) }}
+                    </span>
+                </td>
+                <td>{{ recipe.updated_at.strftime('%b %d') if recipe.updated_at else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <p class="text-muted fs-5">No recipes yet. Create your first brew!</p>
+    <a href="{{ url_for('recipes.new_recipe') }}" class="btn btn-primary btn-lg">Create Recipe</a>
+</div>
+{% endif %}
+{% endblock %}

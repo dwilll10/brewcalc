@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}New Recipe - BrewCalc{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">New Recipe</h1>
+
+<form method="POST" class="row g-3" style="max-width: 700px">
+    <div class="col-12">
+        <label for="name" class="form-label">Recipe Name</label>
+        <input type="text" class="form-control" id="name" name="name" required placeholder="e.g. Session Pale Ale">
+    </div>
+
+    <div class="col-md-6">
+        <label for="style_id" class="form-label">Style</label>
+        <select class="form-select" id="style_id" name="style_id">
+            <option value="">-- Select Style --</option>
+            {% for style in styles %}
+            <option value="{{ style.id }}">{{ style.category }} {{ style.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="yeast_id" class="form-label">Yeast</label>
+        <select class="form-select" id="yeast_id" name="yeast_id">
+            <option value="">-- Select Yeast --</option>
+            {% for yeast in yeasts %}
+            <option value="{{ yeast.id }}">{{ yeast.code }} - {{ yeast.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label for="batch_size" class="form-label">Batch Size (gal)</label>
+        <input type="number" class="form-control" id="batch_size" name="batch_size" value="1.75" step="0.25" min="0.5" max="15">
+    </div>
+
+    <div class="col-md-4">
+        <label for="boil_time" class="form-label">Boil Time (min)</label>
+        <input type="number" class="form-control" id="boil_time" name="boil_time" value="60" step="5" min="15" max="120">
+    </div>
+
+    <div class="col-md-4">
+        <label for="efficiency" class="form-label">Efficiency</label>
+        <input type="number" class="form-control" id="efficiency" name="efficiency" value="1.0" step="0.05" min="0.5" max="1.0">
+        <div class="form-text">1.0 for extract brewing</div>
+    </div>
+
+    <div class="col-12">
+        <label for="notes" class="form-label">Notes</label>
+        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Create & Add Ingredients</button>
+        <a href="{{ url_for('recipes.index') }}" class="btn btn-secondary ms-2">Cancel</a>
+    </div>
+</form>
+{% endblock %}

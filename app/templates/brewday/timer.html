@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Brew Day: {{ recipe.name }} - BrewCalc{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Brew Day: {{ recipe.name }}</h1>
+    <a href="{{ url_for('recipes.detail', recipe_id=recipe.id) }}" class="btn btn-outline-secondary btn-sm">Back to Recipe</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-auto"><strong>Batch:</strong> {{ recipe.batch_size }} gal</div>
+    <div class="col-auto"><strong>Boil:</strong> {{ recipe.boil_time }} min</div>
+    <div class="col-auto"><strong>Target OG:</strong> {{ '%.3f'|format(recipe.og or 1.0) }}</div>
+</div>
+
+<div class="list-group" id="brew-steps">
+    {% for step in steps %}
+    <div class="list-group-item d-flex align-items-start gap-3 brew-step" data-index="{{ loop.index0 }}">
+        <div class="pt-1">
+            <input type="checkbox" class="form-check-input step-check" id="step-{{ loop.index0 }}">
+        </div>
+        <div class="flex-grow-1">
+            <div class="step-text">{{ step.text }}</div>
+            {% if step.timer %}
+            <div class="mt-2">
+                <span class="badge bg-primary timer-display fs-6" data-seconds="{{ step.timer }}">
+                    {{ '%02d:%02d'|format(step.timer // 60, step.timer % 60) }}
+                </span>
+                <button class="btn btn-sm btn-outline-primary ms-2 timer-start">Start Timer</button>
+            </div>
+            {% endif %}
+        </div>
+        {% if step.type == 'note' %}
+        <span class="badge bg-info">Note</span>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+{% endblock %}

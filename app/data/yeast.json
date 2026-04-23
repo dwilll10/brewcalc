@@ -1,0 +1,12 @@
+[
+  {"name": "Safale US-05", "lab": "Fermentis", "code": "US-05", "attenuation": 0.77, "temp_low": 59, "temp_high": 75, "type": "ale", "notes": "Clean American ale yeast, versatile, neutral. The workhorse."},
+  {"name": "Safale S-04", "lab": "Fermentis", "code": "S-04", "attenuation": 0.73, "temp_low": 59, "temp_high": 75, "type": "ale", "notes": "English ale yeast, fruity esters, flocculates well. Great for stouts and English ales."},
+  {"name": "Nottingham Ale", "lab": "Lallemand", "code": "Nottingham", "attenuation": 0.80, "temp_low": 57, "temp_high": 70, "type": "ale", "notes": "Very clean, high attenuation, fast fermenter. Neutral profile."},
+  {"name": "Windsor Ale", "lab": "Lallemand", "code": "Windsor", "attenuation": 0.68, "temp_low": 59, "temp_high": 72, "type": "ale", "notes": "English-style, low attenuation, fruity, full-bodied beers."},
+  {"name": "WLP001 California Ale", "lab": "White Labs", "code": "WLP001", "attenuation": 0.76, "temp_low": 68, "temp_high": 73, "type": "ale", "notes": "Classic American ale. Clean, versatile. Same strain as US-05."},
+  {"name": "WLP002 English Ale", "lab": "White Labs", "code": "WLP002", "attenuation": 0.66, "temp_low": 65, "temp_high": 68, "type": "ale", "notes": "Malty, fruity, full-bodied. Classic English character. Very flocculant."},
+  {"name": "WLP013 London Ale", "lab": "White Labs", "code": "WLP013", "attenuation": 0.71, "temp_low": 66, "temp_high": 71, "type": "ale", "notes": "Dry, malty, clean, slightly fruity. Great for porters and stouts."},
+  {"name": "Wyeast 1056 American Ale", "lab": "Wyeast", "code": "1056", "attenuation": 0.75, "temp_low": 60, "temp_high": 72, "type": "ale", "notes": "Clean, crisp, well-balanced. Same strain as US-05/WLP001."},
+  {"name": "Wyeast 1968 London ESB", "lab": "Wyeast", "code": "1968", "attenuation": 0.69, "temp_low": 64, "temp_high": 72, "type": "ale", "notes": "Bold, malty, rich. Highly flocculant. Great for English bitters and stouts."},
+  {"name": "Safale K-97", "lab": "Fermentis", "code": "K-97", "attenuation": 0.81, "temp_low": 59, "temp_high": 75, "type": "ale", "notes": "German ale yeast, produces subtle fruity esters, good for wheat beers and Kolsch."}
+]
