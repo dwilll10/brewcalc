@@ -1,0 +1,747 @@
+Raspberry Pi Fermentation Controller — Setup Guide
+====================================================
+
+This guide walks through setting up a Raspberry Pi to control
+fermentation temperature and integrate it with the BrewCalc web app.
+
+
+WHAT YOU WILL NEED
+==================
+
+Hardware:
+  - Raspberry Pi 4 (2GB or more) with USB-C power supply
+  - 32GB MicroSD card
+  - DS18B20 waterproof temperature probe (pre-wired, 3 wires)
+  - 4.7k Ohm resistor (1/4W)
+  - 2-channel relay module (SRD-05VDC, opto-isolated, 5V)
+  - FermWrap or Brew Belt (25-40W heat wrap)
+  - USB fan (80mm, 5V) for cooling
+  - Jumper wires (male-to-female)
+  - Breadboard (optional, for prototyping)
+
+Software:
+  - Raspberry Pi Imager (download from raspberrypi.com)
+  - A computer on the same Wi-Fi network as the Pi
+  - The BrewCalc recipe app running on your computer
+
+Tools:
+  - Phillips screwdriver (if using a Pi case)
+  - Wire strippers (if wiring mains connections)
+  - Electrical tape or heat shrink tubing
+
+
+=====================================================================
+PHASE 1: PREPARE THE RASPBERRY PI
+=====================================================================
+
+STEP 1: Flash the Operating System
+------------------------------------
+
+1. Download and install Raspberry Pi Imager from:
+   https://www.raspberrypi.com/software/
+
+2. Insert your 32GB MicroSD card into your computer.
+
+3. Open Raspberry Pi Imager and configure:
+   - Device: Raspberry Pi 4
+   - OS: Raspberry Pi OS Lite (64-bit)
+        (under "Raspberry Pi OS (other)")
+        Choose the Lite version — no desktop needed.
+   - Storage: Your MicroSD card
+
+4. Click the gear icon (or Ctrl+Shift+X) for advanced settings:
+   - Set hostname: raspberrypi
+   - Enable SSH: Use password authentication
+   - Set username: pi
+   - Set password: (choose a strong password, write it down)
+   - Configure Wi-Fi:
+       SSID: your Wi-Fi network name
+       Password: your Wi-Fi password
+       Country: US
+   - Set locale: America/New_York (or your timezone)
+
+5. Click "Write" and wait for it to finish.
+
+6. Remove the MicroSD card from your computer.
+
+
+STEP 2: Boot and Connect
+--------------------------
+
+1. Insert the MicroSD card into the Raspberry Pi.
+
+2. Connect the USB-C power supply. The Pi will boot automatically.
+   Wait about 60-90 seconds for the first boot to complete.
+
+3. Find the Pi on your network. From your Mac terminal, run:
+
+   ping raspberrypi.local
+
+   If that works, you will see replies. If not, check your router's
+   admin page for connected devices or try:
+
+   arp -a | grep raspberry
+
+4. SSH into the Pi:
+
+   ssh pi@raspberrypi.local
+
+   Type "yes" when asked about the host fingerprint.
+   Enter the password you set in Step 1.
+
+5. You should now see a command prompt like:
+   pi@raspberrypi:~ $
+
+
+STEP 3: Update the System
+---------------------------
+
+Run these commands on the Pi:
+
+   sudo apt update && sudo apt upgrade -y
+
+This may take 5-10 minutes. Let it finish completely.
+
+
+STEP 4: Enable the 1-Wire Interface
+--------------------------------------
+
+The DS18B20 temperature sensor uses the 1-Wire protocol on GPIO4.
+
+1. Edit the boot config:
+
+   sudo nano /boot/firmware/config.txt
+
+   Note: On older Pi OS versions the file may be at /boot/config.txt
+
+2. Add this line at the end of the file:
+
+   dtoverlay=w1-gpio
+
+3. Save and exit (Ctrl+O, Enter, Ctrl+X).
+
+4. Reboot:
+
+   sudo reboot
+
+5. SSH back in after 30 seconds:
+
+   ssh pi@raspberrypi.local
+
+
+STEP 5: Install Python Dependencies
+--------------------------------------
+
+1. Install pip and git:
+
+   sudo apt install -y python3-pip git
+
+2. Clone the BrewCalc repository:
+
+   git clone https://github.com/dwilll10/brewcalc.git
+   cd brewcalc/fermctl
+
+3. Install Python dependencies:
+
+   pip3 install flask
+
+   Note: RPi.GPIO comes pre-installed on Raspberry Pi OS.
+
+
+=====================================================================
+PHASE 2: WIRE THE HARDWARE
+=====================================================================
+
+IMPORTANT SAFETY NOTES:
+  - Disconnect the Pi from power before wiring.
+  - The relay module switches mains voltage (120V AC). If you are
+    not comfortable working with mains wiring, use a pre-made
+    smart plug (like a Sonoff S31) controlled via the relay instead.
+  - All mains wiring should be inside a project enclosure box.
+  - Never touch exposed mains connections while plugged in.
+
+
+STEP 6: Wire the DS18B20 Temperature Sensor
+----------------------------------------------
+
+The DS18B20 has three wires (colors may vary):
+
+   Red    = VCC (power, 3.3V)
+   Black  = GND (ground)
+   Yellow = Data (1-Wire signal)
+
+Wiring:
+
+   DS18B20 Red    -->  Pi Pin 1  (3.3V)
+   DS18B20 Black  -->  Pi Pin 6  (GND)
+   DS18B20 Yellow -->  Pi Pin 7  (GPIO4)
+
+   4.7k Ohm resistor between Pin 1 (3.3V) and Pin 7 (GPIO4)
+   This is a pull-up resistor required for the 1-Wire protocol.
+
+Pin layout reference (looking at the Pi with USB ports at bottom):
+
+   3.3V [1]  [2] 5V
+   GPIO2[3]  [4] 5V
+   GPIO3[5]  [6] GND    <-- sensor black wire
+   GPIO4[7]  [8] GPIO14
+        [9]  [10]
+        ...
+
+How to connect on a breadboard:
+   1. Place the resistor between two rows on the breadboard.
+   2. Connect one end of the resistor to Pin 1 (3.3V) via jumper wire.
+   3. Connect the other end of the resistor to Pin 7 (GPIO4) via jumper wire.
+   4. Connect the sensor's yellow wire to the same row as the
+      resistor end that goes to GPIO4.
+   5. Connect the sensor's red wire to the 3.3V row.
+   6. Connect the sensor's black wire to Pin 6 (GND).
+
+
+STEP 7: Verify the Temperature Sensor
+----------------------------------------
+
+1. Power on the Pi and SSH in.
+
+2. Check that the sensor is detected:
+
+   ls /sys/bus/w1/devices/
+
+   You should see a directory starting with "28-" (e.g. 28-00000abcdef).
+   If you only see "w1_bus_master1", check your wiring and the
+   resistor placement.
+
+3. Read the temperature:
+
+   cat /sys/bus/w1/devices/28-*/w1_slave
+
+   You should see output like:
+   73 01 4b 46 7f ff 0d 10 41 : crc=41 YES
+   73 01 4b 46 7f ff 0d 10 41 t=23187
+
+   "YES" means the CRC check passed.
+   "t=23187" means 23.187 degrees Celsius (about 73.7 F).
+
+4. Quick test with the fermctl sensor module:
+
+   cd ~/brewcalc/fermctl
+   python3 -c "
+   from fermctl.sensor import read_temp_f
+   temp = read_temp_f()
+   print(f'Temperature: {temp} F')
+   "
+
+   You should see the current room temperature in Fahrenheit.
+
+
+STEP 8: Wire the Relay Module
+--------------------------------
+
+The 2-channel relay module has these pins:
+
+   VCC  = Power (5V)
+   GND  = Ground
+   IN1  = Channel 1 control (heat)
+   IN2  = Channel 2 control (cool)
+
+Wiring:
+
+   Relay VCC  -->  Pi Pin 2  (5V)
+   Relay GND  -->  Pi Pin 9  (GND)
+   Relay IN1  -->  Pi Pin 11 (GPIO17)  — controls heat
+   Relay IN2  -->  Pi Pin 13 (GPIO27)  — controls cooling
+
+Pin layout reference:
+
+   3.3V [1]  [2]  5V     <-- relay VCC
+        [3]  [4]  5V
+        [5]  [6]  GND
+   GPIO4[7]  [8]
+    GND [9]  [10]         <-- relay GND
+  GPIO17[11] [12]         <-- relay IN1 (heat)
+  GPIO27[13] [14] GND     <-- relay IN2 (cool)
+
+
+STEP 9: Test the Relay with a Desk Lamp
+------------------------------------------
+
+Before connecting the heat wrap, test with something visible
+like a desk lamp so you can confirm the relay clicks on/off.
+
+1. Connect a desk lamp's power cord through the relay:
+   - Cut the hot (black) wire of an extension cord or lamp cord.
+   - Connect one cut end to the relay's COM (common) terminal.
+   - Connect the other cut end to the relay's NO (normally open) terminal.
+   - The neutral (white) wire passes through uncut.
+
+   IMPORTANT: Use wire nuts or solder + heat shrink. No exposed copper.
+
+2. Plug in the lamp (it should be OFF since the relay is normally open).
+
+3. Test from the Pi:
+
+   cd ~/brewcalc/fermctl
+   python3 -c "
+   from fermctl.relay import heat_on, heat_off, cool_on, cool_off
+   import time
+   print('Heat ON')
+   heat_on()    # Lamp should turn on, relay clicks
+   time.sleep(3)
+   print('Heat OFF')
+   heat_off()   # Lamp turns off
+   time.sleep(2)
+   print('Cool ON')
+   cool_on()    # Second relay clicks
+   time.sleep(3)
+   print('Cool OFF')
+   cool_off()
+   print('Done')
+   "
+
+4. You should see the lamp turn on and off with each relay command.
+   If the lamp turns OFF when you call heat_on(), the relay logic
+   is inverted. Edit fermctl/config.py and set:
+   RELAY_ACTIVE_LOW = False
+
+
+STEP 10: Connect the Heat Wrap and Fan
+-----------------------------------------
+
+Once the relay test passes with the desk lamp:
+
+1. Disconnect the desk lamp from the relay.
+
+2. Connect the FermWrap/Brew Belt to Relay Channel 1 (heat):
+   - Same wiring as the lamp test: hot wire through COM and NO.
+
+3. Connect the USB fan power adapter to Relay Channel 2 (cool):
+   - If using a USB fan with a wall adapter, wire the adapter's
+     plug through the relay the same way.
+   - Alternatively, power the fan from the Pi's USB port and
+     control it via a transistor/MOSFET (more advanced).
+
+4. Place all mains wiring inside a project enclosure box.
+   No exposed terminals or wire should be accessible.
+
+
+=====================================================================
+PHASE 3: START THE CONTROLLER SOFTWARE
+=====================================================================
+
+STEP 11: Test the Controller Manually
+----------------------------------------
+
+1. SSH into the Pi:
+
+   ssh pi@raspberrypi.local
+
+2. Navigate to the fermctl directory:
+
+   cd ~/brewcalc/fermctl
+
+3. Start the controller manually:
+
+   python3 run.py
+
+   You should see:
+   - "Running in HARDWARE mode"
+   - "Starting FermCtl API on 0.0.0.0:5001"
+   - "Database initialized at ..."
+
+4. Open the dashboard in your browser:
+
+   http://raspberrypi.local:5001
+
+   You should see:
+   - The FermCtl dashboard with status cards
+   - Current temperature reading from the sensor
+   - Start/Stop controls
+   - Temperature chart (empty until a run starts)
+
+5. Test a fermentation run from the dashboard:
+   - Enter a recipe name (e.g. "Test Run")
+   - Set a target temperature (e.g. 66)
+   - Click "Start"
+   - Watch the temperature chart begin plotting
+   - Verify the heat relay clicks on if temp is below target
+   - Click "Stop" when done testing
+
+6. Stop the server with Ctrl+C.
+
+
+STEP 12: Install as a System Service
+---------------------------------------
+
+This makes the controller start automatically on boot and
+restart if it crashes.
+
+1. Copy the service file:
+
+   sudo cp ~/brewcalc/fermctl/systemd/fermctl.service /etc/systemd/system/
+
+2. If your username is not "pi" or your path is different, edit:
+
+   sudo nano /etc/systemd/system/fermctl.service
+
+   Update the User and WorkingDirectory/ExecStart paths to match.
+
+3. Enable and start the service:
+
+   sudo systemctl daemon-reload
+   sudo systemctl enable fermctl
+   sudo systemctl start fermctl
+
+4. Check that it is running:
+
+   sudo systemctl status fermctl
+
+   You should see "active (running)" in green.
+
+5. Verify the API responds:
+
+   curl http://localhost:5001/api/status
+
+   You should see JSON with the controller status.
+
+6. The dashboard is now always available at:
+
+   http://raspberrypi.local:5001
+
+7. Useful service commands:
+
+   sudo systemctl stop fermctl      # Stop the controller
+   sudo systemctl restart fermctl   # Restart after code changes
+   sudo journalctl -u fermctl -f    # View live logs
+
+
+=====================================================================
+PHASE 4: CONNECT TO THE BREWCALC RECIPE APP
+=====================================================================
+
+STEP 13: Configure the Recipe App
+------------------------------------
+
+The BrewCalc recipe app needs to know the Pi's address to proxy
+requests to the fermentation controller.
+
+1. On your Mac/PC (where the recipe app runs), find the Pi's IP:
+
+   ping raspberrypi.local
+
+   Note the IP address (e.g. 192.168.1.42).
+
+2. Option A — Use mDNS hostname (simplest):
+
+   The default config already uses http://raspberrypi.local:5001
+   This works if your Mac supports mDNS (it does by default).
+
+   No changes needed — just start the recipe app:
+
+   cd ~/brewcalc
+   python3 run.py
+
+3. Option B — Use a static IP (more reliable):
+
+   If mDNS is unreliable, set a static IP on the Pi:
+
+   sudo nano /etc/dhcpcd.conf
+
+   Add at the bottom:
+
+   interface wlan0
+   static ip_address=192.168.1.42/24
+   static routers=192.168.1.1
+   static domain_name_servers=192.168.1.1 8.8.8.8
+
+   (Replace with your actual network's values.)
+
+   Then update the recipe app config. Edit ~/brewcalc/app/config.py:
+
+   FERMCTL_API_URL = "http://192.168.1.42:5001"
+
+   Or set it as an environment variable:
+
+   FERMCTL_API_URL=http://192.168.1.42:5001 python3 run.py
+
+
+STEP 14: Test the Integration
+--------------------------------
+
+1. Make sure both are running:
+   - Pi: fermctl service (check with: sudo systemctl status fermctl)
+   - Mac: recipe app (python3 run.py in ~/brewcalc)
+
+2. Open the recipe app in your browser:
+
+   http://127.0.0.1:5000
+
+3. Navigate to any recipe and click "Fermentation".
+
+4. You should see:
+   - Current temperature from the Pi sensor
+   - Target temperature
+   - Heat/Cool relay indicators
+   - A "Start Fermentation" button
+
+   If you see "Fermentation controller is offline", the recipe app
+   cannot reach the Pi. Check:
+   - Is the Pi on and connected to Wi-Fi?
+   - Can you ping raspberrypi.local from your Mac?
+   - Is the fermctl service running? (sudo systemctl status fermctl)
+   - Can you reach the Pi dashboard directly?
+     (http://raspberrypi.local:5001)
+
+5. Test the full flow:
+   a. Create a recipe in the recipe app with ingredients
+   b. Set a fermentation profile in the recipe builder
+      (use a preset like "Standard Ale")
+   c. Go to the recipe detail page
+   d. Click "Fermentation"
+   e. Click "Start Fermentation"
+   f. The Pi controller should start a run with the recipe's
+      temperature profile
+   g. The dashboard should show live temperature data
+   h. The heat relay should activate if the temperature is
+      below the target
+
+6. Monitor from either location:
+   - Recipe app: http://127.0.0.1:5000/fermentation/recipe/<id>
+   - Pi dashboard: http://raspberrypi.local:5001
+
+
+=====================================================================
+PHASE 5: SET UP THE FERMENTATION CHAMBER
+=====================================================================
+
+STEP 15: Build the Insulated Chamber
+---------------------------------------
+
+1. Get a styrofoam cooler large enough to hold your 2-gallon carboy.
+   A 28-48 quart cooler works well.
+
+2. Cut a small notch in the lid for:
+   - The DS18B20 sensor wire
+   - The FermWrap power cord
+   - The airlock (or blow-off tube)
+
+3. Line the inside with reflective insulation (optional but helps).
+
+4. Place the carboy inside the cooler.
+
+5. Wrap the FermWrap around the carboy (mid-height works best).
+
+6. Tape the DS18B20 sensor to the carboy wall at liquid level.
+   Cover the sensor with a small square of foam insulation to
+   prevent it from reading air temperature instead of liquid temp.
+
+7. Position the USB fan at the top of the cooler pointing down
+   (for cooling when needed).
+
+8. Route all wires through the notch in the lid.
+
+
+STEP 16: Calibrate and Test
+------------------------------
+
+1. Fill the carboy with room-temperature water (about 1.75 gallons).
+
+2. Place it in the fermentation chamber and seal the lid.
+
+3. Start a test fermentation run:
+   - From the Pi dashboard (http://raspberrypi.local:5001)
+   - Or from the recipe app fermentation page
+   - Set target temperature to 66 F
+
+4. Watch the controller work:
+   - If water is above 66 F, the fan should turn on
+   - If water is below 66 F, the heat wrap should turn on
+   - Temperature should stabilize within 1-2 hours
+
+5. Let it run for 24 hours and check the temperature chart.
+   You should see the temperature hold steady at 66 F +/- 1 F.
+
+6. If temperature oscillates too much (rapid on/off cycling):
+   - Increase the hysteresis in fermctl/config.py:
+     HYSTERESIS_F = 1.0  (instead of 0.5)
+   - Restart the service: sudo systemctl restart fermctl
+
+7. If the heat wrap overshoots:
+   - The insulated chamber may be too effective
+   - Try removing some insulation or cracking the lid slightly
+
+
+=====================================================================
+PHASE 6: BREW YOUR FIRST BATCH
+=====================================================================
+
+STEP 17: Create Your First Recipe
+------------------------------------
+
+1. Open the recipe app: http://127.0.0.1:5000
+
+2. Click "New Recipe" and enter:
+   - Name: Session Pale Ale
+   - Style: 18B American Pale Ale
+   - Yeast: US-05 Safale US-05
+   - Batch size: 1.75
+   - Boil time: 60
+   - Efficiency: 1.0
+
+3. In the builder, add fermentables:
+   - 40 oz (2.5 lb) Light Liquid Malt Extract — use: Boil
+   - 4 oz Crystal 40L — use: Steep
+
+4. Add hops:
+   - 0.5 oz Centennial — 60 min — Boil
+   - 0.5 oz Citra — 5 min — Boil
+   - 0.25 oz Citra — 0 min — Dry Hop
+
+5. Check your stats against the style guidelines:
+   - OG: ~1.045 (target: 1.045-1.060)
+   - IBU: ~38 (target: 30-50)
+   - ABV: ~4.5% (target: 4.5-6.2%)
+   - SRM: ~7 (target: 5-10)
+
+6. Set the fermentation profile:
+   - Use the "Standard Ale (66F)" preset
+   - Or customize: 66 F for 7 days, ramp to 70 F for 3 days
+
+7. Click "Brew Day" to see your step-by-step instructions
+   with equipment list and timers.
+
+
+STEP 18: Brew Day
+--------------------
+
+1. Gather all equipment (check the equipment checklist on the
+   brew day page).
+
+2. Sanitize everything that touches the wort after the boil:
+   fermenter, airlock, siphon, tubing, stopper.
+   Spray with Star San solution.
+
+3. Follow the brew day steps in the app. Use the timers.
+
+4. After pitching yeast and sealing the fermenter:
+   a. Place the carboy in the fermentation chamber
+   b. Attach the DS18B20 sensor to the carboy
+   c. Close the chamber lid
+   d. Go to the recipe's fermentation page
+   e. Click "Start Fermentation"
+
+5. The Pi controller will now manage the temperature
+   automatically for the duration of the fermentation profile.
+
+
+STEP 19: Monitor Fermentation
+--------------------------------
+
+1. Check the fermentation dashboard periodically:
+   - Recipe app: http://127.0.0.1:5000/fermentation/recipe/<id>
+   - Pi direct: http://raspberrypi.local:5001
+
+2. What to look for:
+   - Temperature holding steady at target (+/- 1 F)
+   - Airlock bubbling within 12-24 hours (fermentation started)
+   - Heat/cool cycling normally (not constantly on)
+
+3. The profile will automatically ramp temperature per your
+   waypoints (e.g. raise to 70 F on day 4 for diacetyl rest).
+
+4. After 10-14 days (or when the profile ends):
+   - Click "Stop Fermentation" on the dashboard
+   - Take a hydrometer reading to confirm FG
+   - If FG matches expected value, fermentation is complete
+   - Bottle or keg your beer
+
+
+=====================================================================
+TROUBLESHOOTING
+=====================================================================
+
+Problem: "No DS18B20 sensor found"
+  - Check wiring: red to 3.3V, black to GND, yellow to GPIO4
+  - Verify the 4.7k resistor is between 3.3V and GPIO4
+  - Check dtoverlay=w1-gpio is in /boot/firmware/config.txt
+  - Reboot after config changes: sudo reboot
+  - Run: ls /sys/bus/w1/devices/ (should show 28-xxxx)
+
+Problem: Relay does not click
+  - Check wiring: VCC to 5V (not 3.3V), GND to GND
+  - Check IN1 to GPIO17, IN2 to GPIO27
+  - Test manually: python3 -c "from fermctl.relay import heat_on; heat_on()"
+  - Try toggling RELAY_ACTIVE_LOW in config.py
+
+Problem: Temperature reads but relay does not respond
+  - Check the fermctl service logs: sudo journalctl -u fermctl -f
+  - Verify a run is active: curl http://localhost:5001/api/status
+  - Check if watchdog triggered (no valid reading for 60 sec)
+
+Problem: Recipe app shows "controller offline"
+  - Verify Pi is on: ping raspberrypi.local
+  - Verify fermctl is running: sudo systemctl status fermctl
+  - Check the URL in app/config.py matches the Pi's address
+  - Test directly: curl http://raspberrypi.local:5001/api/status
+
+Problem: Temperature oscillates rapidly
+  - Increase HYSTERESIS_F in fermctl/config.py (try 1.0 or 1.5)
+  - Improve insulation around the fermentation chamber
+  - Ensure the sensor is insulated against air temp (tape foam over it)
+
+Problem: Pi loses Wi-Fi
+  - Set a static IP (see Step 13, Option B)
+  - Consider a wired Ethernet connection for reliability
+  - The controller continues running without Wi-Fi; only the
+    dashboard and recipe app integration are affected
+
+Problem: Service does not start on boot
+  - Check: sudo systemctl is-enabled fermctl
+  - Re-enable: sudo systemctl enable fermctl
+  - Check logs: sudo journalctl -u fermctl --no-pager | tail -20
+
+Problem: Permission denied on GPIO
+  - The pi user should have GPIO access by default
+  - If not: sudo usermod -aG gpio pi
+  - Reboot after group changes
+
+
+=====================================================================
+UPDATING THE SOFTWARE
+=====================================================================
+
+When new features are added to the repository:
+
+On the Raspberry Pi:
+
+   cd ~/brewcalc
+   git pull origin main
+   sudo systemctl restart fermctl
+
+On your Mac (recipe app):
+
+   cd ~/brewcalc
+   git pull origin main
+   # Restart the recipe app (Ctrl+C, then python3 run.py)
+
+
+=====================================================================
+QUICK REFERENCE
+=====================================================================
+
+Pi Dashboard:         http://raspberrypi.local:5001
+Recipe App:           http://127.0.0.1:5000
+SSH to Pi:            ssh pi@raspberrypi.local
+Start controller:     sudo systemctl start fermctl
+Stop controller:      sudo systemctl stop fermctl
+View logs:            sudo journalctl -u fermctl -f
+Check status:         curl http://raspberrypi.local:5001/api/status
+Sensor test:          cat /sys/bus/w1/devices/28-*/w1_slave
+
+GPIO Pin Summary:
+  Pin 1  (3.3V)   - DS18B20 VCC + pull-up resistor
+  Pin 2  (5V)     - Relay module VCC
+  Pin 6  (GND)    - DS18B20 GND
+  Pin 7  (GPIO4)  - DS18B20 Data + pull-up resistor
+  Pin 9  (GND)    - Relay module GND
+  Pin 11 (GPIO17) - Relay IN1 (heat)
+  Pin 13 (GPIO27) - Relay IN2 (cool)
