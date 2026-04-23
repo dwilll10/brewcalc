@@ -31,6 +31,7 @@ def _generate_steps(recipe):
         "text": f"Heat {water_gal:.1f} gallons of water to 155 F",
         "timer": None,
         "type": "action",
+        "equipment": ["Brew kettle (3 gal)", "Thermometer", "Stir spoon"],
     })
 
     if steep_grains:
@@ -41,17 +42,20 @@ def _generate_steps(recipe):
             "text": f"Steep grains: {grain_list} at 150-155 F",
             "timer": 30 * 60,
             "type": "timer",
+            "equipment": ["Mesh grain bag", "Thermometer"],
         })
         steps.append({
             "text": "Remove grain bag, let drip. Do not squeeze.",
             "timer": None,
             "type": "action",
+            "equipment": ["Heat-resistant gloves or tongs"],
         })
 
     steps.append({
         "text": "Bring to a boil",
         "timer": None,
         "type": "action",
+        "equipment": ["Brew kettle"],
     })
 
     if boil_additions:
@@ -62,6 +66,7 @@ def _generate_steps(recipe):
             "text": f"Remove from heat. Stir in extracts: {extract_list}. Return to boil.",
             "timer": None,
             "type": "action",
+            "equipment": ["Stir spoon", "Digital scale"],
         })
 
     # Hop additions during boil
@@ -71,6 +76,7 @@ def _generate_steps(recipe):
             "text": f"Start {recipe.boil_time}-minute boil. Add {first_hop.amount_oz} oz {first_hop.hop.name} (bittering)",
             "timer": recipe.boil_time * 60,
             "type": "timer",
+            "equipment": ["Digital scale", "Hop bag (optional)"],
         })
         for hop in boil_hops[1:]:
             mins_left = hop.boil_time_min
@@ -79,12 +85,14 @@ def _generate_steps(recipe):
                 "timer": None,
                 "type": "alert",
                 "alert_at": (recipe.boil_time - mins_left) * 60,
+                "equipment": ["Digital scale"],
             })
     else:
         steps.append({
             "text": f"Start {recipe.boil_time}-minute boil",
             "timer": recipe.boil_time * 60,
             "type": "timer",
+            "equipment": ["Brew kettle"],
         })
 
     if flameout_hops:
@@ -93,12 +101,21 @@ def _generate_steps(recipe):
             "text": f"Flameout: add {hop_list}. Steep 10 min.",
             "timer": 10 * 60,
             "type": "timer",
+            "equipment": ["Digital scale", "Hop bag (optional)"],
         })
 
     steps.append({
         "text": "Chill wort to ~68-70 F (ice bath or wort chiller)",
         "timer": None,
         "type": "action",
+        "equipment": ["Ice bath or wort chiller", "Thermometer", "Sink or large basin"],
+    })
+
+    steps.append({
+        "text": "Take hydrometer reading to verify OG",
+        "timer": None,
+        "type": "action",
+        "equipment": ["Hydrometer", "Test jar", "Turkey baster or wine thief"],
     })
 
     yeast_name = recipe.yeast.name if recipe.yeast else "yeast"
@@ -106,6 +123,14 @@ def _generate_steps(recipe):
         "text": f"Transfer to fermenter, pitch {yeast_name}. Seal with airlock.",
         "timer": None,
         "type": "action",
+        "equipment": ["Fermenter (2 gal)", "Auto-siphon + tubing", "Airlock + stopper", "Star San spray bottle"],
+    })
+
+    steps.append({
+        "text": "Clean all equipment thoroughly",
+        "timer": None,
+        "type": "action",
+        "equipment": ["PBW or OxiClean", "Brush", "Spray bottle"],
     })
 
     if dryhop_hops:
@@ -114,6 +139,7 @@ def _generate_steps(recipe):
             "text": f"Dry hop (add after 3-5 days): {hop_list}",
             "timer": None,
             "type": "note",
+            "equipment": ["Digital scale", "Sanitized hop bag or loose addition"],
         })
 
     return steps

@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Brew Day: {{ recipe.name }} - BrewCalc{% endblock %}
 
+{% block head %}
+<style>
+    .equip-tag {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #adb5bd;
+        margin: 2px 2px 2px 0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Brew Day: {{ recipe.name }}</h1>
@@ -13,6 +28,31 @@
     <div class="col-auto"><strong>Target OG:</strong> {{ '%.3f'|format(recipe.og or 1.0) }}</div>
 </div>
 
+<!-- Full Equipment Checklist -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Equipment Checklist</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            {% set all_equipment = [] %}
+            {% for step in steps %}
+                {% for item in step.equipment %}
+                    {% if item not in all_equipment %}
+                        {% if all_equipment.append(item) %}{% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            {% for item in all_equipment %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="equip-{{ loop.index0 }}">
+                <label class="form-check-label small" for="equip-{{ loop.index0 }}">{{ item }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <div class="list-group" id="brew-steps">
     {% for step in steps %}
     <div class="list-group-item d-flex align-items-start gap-3 brew-step" data-index="{{ loop.index0 }}">
@@ -21,6 +61,13 @@
         </div>
         <div class="flex-grow-1">
             <div class="step-text">{{ step.text }}</div>
+            {% if step.equipment %}
+            <div class="mt-1">
+                {% for item in step.equipment %}
+                <span class="equip-tag">{{ item }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% if step.timer %}
             <div class="mt-2">
                 <span class="badge bg-primary timer-display fs-6" data-seconds="{{ step.timer }}">
