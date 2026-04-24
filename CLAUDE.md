@@ -22,8 +22,8 @@ brewcalc/
 │   ├── data/                            # JSON seed catalogs
 │   │   ├── fermentables.json            # 22 extracts, grains, sugars
 │   │   ├── hops.json                    # 30 hop varieties
-│   │   ├── yeast.json                   # 10 yeast strains
-│   │   └── bjcp_styles.json             # 12 BJCP style guidelines
+│   │   ├── yeast.json                   # 11 yeast strains (incl. Lallemand Philly Sour)
+│   │   └── bjcp_styles.json             # 13 BJCP style guidelines (incl. Fruited Sour)
 │   ├── routes/
 │   │   ├── recipes.py                   # Recipe CRUD + AJAX API + scale + profile
 │   │   ├── brewday.py                   # Brew day timer/checklist with equipment
@@ -70,11 +70,11 @@ brewcalc/
 
 | File | Purpose |
 |------|---------|
-| `app/models.py` | 8 SQLAlchemy models: Style, Fermentable, Hop, Yeast, Recipe, RecipeFermentable, RecipeHop, RecipeAdjunct |
+| `app/models.py` | 8 SQLAlchemy models: Style, Fermentable, Hop, Yeast, Recipe, RecipeFermentable, RecipeHop, RecipeAdjunct. `RecipeAdjunct` uses structured `stage` (mash/boil/flameout/primary/secondary/bottling) + `time_value` instead of free-text; `display_when` property renders it |
 | `app/calc/ibu.py` | Tinseth IBU calculation — most complex formula, core of recipe accuracy |
 | `app/calc/gravity.py` | OG/FG calculations — handles extract vs grain efficiency correctly |
 | `app/routes/recipes.py` | Recipe CRUD + REST API for builder, batch scaling, fermentation profiles |
-| `app/routes/brewday.py` | Generates brew day steps with per-step equipment lists |
+| `app/routes/brewday.py` | Generates brew day steps with per-step equipment lists. `_generate_steps()` slots adjuncts into the timeline by stage (mash adjuncts merge with steep step; boil adjuncts become mid-boil alerts; flameout/primary/secondary/bottling become standalone steps) |
 | `app/routes/fermentation.py` | Proxies requests to Pi controller, handles offline gracefully |
 | `app/routes/admin.py` | Admin CRUD for all ingredient types and styles |
 | `app/static/js/calculator.js` | Client-side AJAX, batch scaling, fermentation profile editor with Chart.js |
@@ -114,7 +114,7 @@ FERMCTL_SIMULATE=1 python3 run.py    # simulated sensor, no GPIO
 - Python 3.9+
 - Flask, Flask-SQLAlchemy, Flask-Migrate, requests
 - RPi.GPIO (on Raspberry Pi only, auto-detected)
-- Frontend: Bootstrap 5 + Chart.js via CDN (no npm/node)
+- Frontend: Bootstrap 5 + Bootstrap Icons 1.11 + Chart.js via CDN (no npm/node)
 - SQLite (no external database server needed)
 
 ## Testing
@@ -189,5 +189,6 @@ See `RASPBERRY_PI_SETUP.txt` for the complete step-by-step guide covering:
 |------|---------|
 | `RASPBERRY_PI_SETUP.txt` | Step-by-step Pi setup and integration guide (19 steps) |
 | `EQUIPMENT_LIST.txt` | Full equipment procurement list with prices and retailers |
+| `googleconvert.txt` | Plan for porting the Flask app to Google Apps Script + Sheets (reference only, not executed) |
 | `README.txt` | Project overview and quick start |
 | `CLAUDE.md` | Architecture reference and developer guide (this file) |

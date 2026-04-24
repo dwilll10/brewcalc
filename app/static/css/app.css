@@ -24,3 +24,52 @@ body {
 .form-control-sm, .form-select-sm {
     font-size: 0.85rem;
 }
+
+/* Beer mug accent in brand + titles */
+.brew-mug {
+    display: inline-block;
+    font-size: 1.1em;
+    transform: translateY(-1px);
+    filter: drop-shadow(0 1px 2px rgba(255, 180, 0, 0.35));
+}
+.navbar-brand .brew-mug {
+    font-size: 1.3em;
+    margin-right: 0.15em;
+}
+
+/* Section headers get a tiny bit of weight and spacing */
+h4 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+/* Stat cards lift gently on hover */
+.stat-card {
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    border-color: rgba(255, 193, 7, 0.35);
+}
+
+/* Recipe list rows: warm hover accent */
+.recipe-table tbody tr {
+    transition: background-color 100ms ease;
+}
+.recipe-table tbody tr:hover {
+    background-color: rgba(255, 193, 7, 0.08) !important;
+}
+
+/* Empty state beer mug */
+.empty-mug {
+    font-size: 5rem;
+    line-height: 1;
+    filter: drop-shadow(0 4px 10px rgba(255, 180, 0, 0.3));
+}
+
+/* Bootstrap Icons render baseline-aligned */
+.bi {
+    vertical-align: -0.125em;
+}

@@ -8,5 +8,6 @@
   {"name": "WLP013 London Ale", "lab": "White Labs", "code": "WLP013", "attenuation": 0.71, "temp_low": 66, "temp_high": 71, "type": "ale", "notes": "Dry, malty, clean, slightly fruity. Great for porters and stouts."},
   {"name": "Wyeast 1056 American Ale", "lab": "Wyeast", "code": "1056", "attenuation": 0.75, "temp_low": 60, "temp_high": 72, "type": "ale", "notes": "Clean, crisp, well-balanced. Same strain as US-05/WLP001."},
   {"name": "Wyeast 1968 London ESB", "lab": "Wyeast", "code": "1968", "attenuation": 0.69, "temp_low": 64, "temp_high": 72, "type": "ale", "notes": "Bold, malty, rich. Highly flocculant. Great for English bitters and stouts."},
-  {"name": "Safale K-97", "lab": "Fermentis", "code": "K-97", "attenuation": 0.81, "temp_low": 59, "temp_high": 75, "type": "ale", "notes": "German ale yeast, produces subtle fruity esters, good for wheat beers and Kolsch."}
+  {"name": "Safale K-97", "lab": "Fermentis", "code": "K-97", "attenuation": 0.81, "temp_low": 59, "temp_high": 75, "type": "ale", "notes": "German ale yeast, produces subtle fruity esters, good for wheat beers and Kolsch."},
+  {"name": "Lallemand Philly Sour", "lab": "Lallemand", "code": "Philly Sour", "attenuation": 0.80, "temp_low": 68, "temp_high": 77, "type": "ale", "notes": "Single-pitch souring yeast (Lachancea). Produces lactic acid + alcohol in one fermentation — no kettle sour step needed. Stone fruit esters. Perfect for fruited sours."}
 ]

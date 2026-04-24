@@ -305,14 +305,51 @@ function initBuilder(recipeId) {
         rebuildHops(data.hops, base);
     });
 
-    // Add adjunct
-    document.getElementById('add-adjunct-btn').addEventListener('click', async () => {
-        const name = prompt('Adjunct name:');
+    // Adjunct form toggle + submit
+    const adjForm = document.getElementById('adjunct-form');
+    const adjStageSel = document.getElementById('adj-stage');
+    const adjTimeLabel = document.getElementById('adj-time-label');
+    const adjTimeInput = document.getElementById('adj-time');
+
+    function updateAdjTimeLabel() {
+        const stage = adjStageSel.value;
+        if (stage === 'boil') adjTimeLabel.textContent = 'Min remaining';
+        else if (stage === 'mash' || stage === 'flameout') adjTimeLabel.textContent = 'Minutes';
+        else adjTimeLabel.textContent = 'Day';
+    }
+    adjStageSel.addEventListener('change', updateAdjTimeLabel);
+
+    function resetAdjForm() {
+        document.getElementById('adj-name').value = '';
+        document.getElementById('adj-amount').value = '';
+        adjStageSel.value = 'boil';
+        adjTimeInput.value = '';
+        updateAdjTimeLabel();
+    }
+
+    document.getElementById('add-adjunct-btn').addEventListener('click', () => {
+        adjForm.style.display = adjForm.style.display === 'none' ? 'block' : 'none';
+        if (adjForm.style.display === 'block') document.getElementById('adj-name').focus();
+    });
+
+    document.getElementById('adj-cancel').addEventListener('click', () => {
+        adjForm.style.display = 'none';
+        resetAdjForm();
+    });
+
+    document.getElementById('adj-save').addEventListener('click', async () => {
+        const name = document.getElementById('adj-name').value.trim();
         if (!name) return;
-        const amount = prompt('Amount (e.g. "1 oz"):') || '';
-        const addTime = prompt('When to add (e.g. "boil 15 min", "secondary 5 days"):') || '';
-        const data = await apiCall(`${base}/adjunct`, 'POST', { name, amount, add_time: addTime });
+        const payload = {
+            name,
+            amount: document.getElementById('adj-amount').value.trim(),
+            stage: adjStageSel.value,
+            time_value: adjTimeInput.value === '' ? null : parseInt(adjTimeInput.value),
+        };
+        const data = await apiCall(`${base}/adjunct`, 'POST', payload);
         rebuildAdjuncts(data.adjuncts, base);
+        resetAdjForm();
+        adjForm.style.display = 'none';
     });
 
     // Batch scaling
@@ -476,11 +513,15 @@ function rebuildAdjuncts(adjuncts, base) {
     const tbody = document.getElementById('adjuncts-list');
     tbody.innerHTML = adjuncts.map(a => `
         <tr data-id="${a.id}">
-            <td>${a.name}</td>
-            <td>${a.amount}</td>
-            <td>${a.add_time}</td>
+            <td>${escapeHtml(a.name || '')}</td>
+            <td>${escapeHtml(a.amount || '')}</td>
+            <td>${escapeHtml(a.display_when || '')}</td>
             <td><button class="btn btn-sm btn-outline-danger adj-delete">&times;</button></td>
         </tr>
     `).join('');
     wireUpAdjuncts(base);
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }

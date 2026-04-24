@@ -3,28 +3,28 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>{{ recipe.name }}</h1>
+    <h1><span class="brew-mug">🍺</span> {{ recipe.name }}</h1>
     <div>
-        <a href="{{ url_for('recipes.builder', recipe_id=recipe.id) }}" class="btn btn-primary btn-sm">Edit Recipe</a>
-        <a href="{{ url_for('brewday.timer', recipe_id=recipe.id) }}" class="btn btn-success btn-sm">Brew Day</a>
-        <a href="{{ url_for('fermentation.dashboard', recipe_id=recipe.id) }}" class="btn btn-info btn-sm">Fermentation</a>
+        <a href="{{ url_for('recipes.builder', recipe_id=recipe.id) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square me-1"></i>Edit</a>
+        <a href="{{ url_for('brewday.timer', recipe_id=recipe.id) }}" class="btn btn-success btn-sm"><i class="bi bi-play-fill me-1"></i>Brew Day</a>
+        <a href="{{ url_for('fermentation.dashboard', recipe_id=recipe.id) }}" class="btn btn-info btn-sm"><i class="bi bi-thermometer-half me-1"></i>Fermentation</a>
         <form method="POST" action="{{ url_for('recipes.delete_recipe', recipe_id=recipe.id) }}" class="d-inline"
               onsubmit="return confirm('Delete this recipe?')">
-            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
         </form>
     </div>
 </div>
 
 {% if style %}
-<p class="text-muted">{{ style.category }} {{ style.name }}</p>
+<p class="text-muted"><i class="bi bi-bookmark-star me-1"></i>{{ style.category }} {{ style.name }}</p>
 {% endif %}
 
 <!-- Stats -->
 <div class="row g-3 mb-4">
     <div class="col-auto">
-        <div class="card text-center" style="min-width: 100px">
+        <div class="card text-center stat-card" style="min-width: 100px">
             <div class="card-body py-2">
-                <div class="text-muted small">OG</div>
+                <div class="text-muted small"><i class="bi bi-droplet-fill me-1"></i>OG</div>
                 <div class="fw-bold fs-5">{{ '%.3f'|format(recipe.og or 1.0) }}</div>
                 {% if style %}
                 <div class="small {{ 'text-success' if style.og_low <= (recipe.og or 0) <= style.og_high else 'text-danger' }}">
@@ -35,9 +35,9 @@
         </div>
     </div>
     <div class="col-auto">
-        <div class="card text-center" style="min-width: 100px">
+        <div class="card text-center stat-card" style="min-width: 100px">
             <div class="card-body py-2">
-                <div class="text-muted small">FG</div>
+                <div class="text-muted small"><i class="bi bi-droplet me-1"></i>FG</div>
                 <div class="fw-bold fs-5">{{ '%.3f'|format(recipe.fg or 1.0) }}</div>
                 {% if style %}
                 <div class="small {{ 'text-success' if style.fg_low <= (recipe.fg or 0) <= style.fg_high else 'text-danger' }}">
@@ -48,9 +48,9 @@
         </div>
     </div>
     <div class="col-auto">
-        <div class="card text-center" style="min-width: 100px">
+        <div class="card text-center stat-card" style="min-width: 100px">
             <div class="card-body py-2">
-                <div class="text-muted small">ABV</div>
+                <div class="text-muted small"><i class="bi bi-lightning-charge-fill me-1"></i>ABV</div>
                 <div class="fw-bold fs-5">{{ '%.1f'|format(recipe.abv or 0) }}%</div>
                 {% if style %}
                 <div class="small {{ 'text-success' if style.abv_low <= (recipe.abv or 0) <= style.abv_high else 'text-danger' }}">
@@ -61,9 +61,9 @@
         </div>
     </div>
     <div class="col-auto">
-        <div class="card text-center" style="min-width: 100px">
+        <div class="card text-center stat-card" style="min-width: 100px">
             <div class="card-body py-2">
-                <div class="text-muted small">IBU</div>
+                <div class="text-muted small">🌿 IBU</div>
                 <div class="fw-bold fs-5">{{ '%.0f'|format(recipe.ibu or 0) }}</div>
                 {% if style %}
                 <div class="small {{ 'text-success' if style.ibu_low <= (recipe.ibu or 0) <= style.ibu_high else 'text-danger' }}">
@@ -74,9 +74,9 @@
         </div>
     </div>
     <div class="col-auto">
-        <div class="card text-center" style="min-width: 100px">
+        <div class="card text-center stat-card" style="min-width: 100px">
             <div class="card-body py-2">
-                <div class="text-muted small">SRM</div>
+                <div class="text-muted small">🎨 SRM</div>
                 <div class="fw-bold fs-5">{{ '%.0f'|format(recipe.srm or 0) }}</div>
                 <div class="rounded mt-1" style="height: 12px; background-color: {{ srm_color(recipe.srm or 0) }}"></div>
             </div>
@@ -85,14 +85,14 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-auto"><strong>Batch:</strong> {{ recipe.batch_size }} gal</div>
-    <div class="col-auto"><strong>Boil:</strong> {{ recipe.boil_time }} min</div>
-    <div class="col-auto"><strong>Yeast:</strong> {{ recipe.yeast.name if recipe.yeast else 'None' }}</div>
+    <div class="col-auto"><i class="bi bi-bucket text-info me-1"></i><strong>Batch:</strong> {{ recipe.batch_size }} gal</div>
+    <div class="col-auto"><i class="bi bi-fire text-danger me-1"></i><strong>Boil:</strong> {{ recipe.boil_time }} min</div>
+    <div class="col-auto">🫧 <strong>Yeast:</strong> {{ recipe.yeast.name if recipe.yeast else 'None' }}</div>
 </div>
 
 <!-- Fermentables -->
 {% if recipe.fermentables %}
-<h4>Fermentables</h4>
+<h4>🌾 Fermentables</h4>
 <table class="table table-sm mb-4">
     <thead>
         <tr><th>Ingredient</th><th>Amount</th><th>Use</th></tr>
@@ -111,7 +111,7 @@
 
 <!-- Hops -->
 {% if recipe.hops %}
-<h4>Hops</h4>
+<h4>🌿 Hops</h4>
 <table class="table table-sm mb-4">
     <thead>
         <tr><th>Hop</th><th>Amount</th><th>Time</th><th>Use</th></tr>
@@ -131,7 +131,7 @@
 
 <!-- Adjuncts -->
 {% if recipe.adjuncts %}
-<h4>Adjuncts</h4>
+<h4>🍒 Adjuncts</h4>
 <table class="table table-sm mb-4">
     <thead>
         <tr><th>Name</th><th>Amount</th><th>When</th></tr>
@@ -141,7 +141,7 @@
         <tr>
             <td>{{ adj.name }}</td>
             <td>{{ adj.amount }}</td>
-            <td>{{ adj.add_time }}</td>
+            <td>{{ adj.display_when }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -150,7 +150,7 @@
 
 <!-- Notes -->
 {% if recipe.notes %}
-<h4>Notes</h4>
+<h4>📝 Notes</h4>
 <p>{{ recipe.notes }}</p>
 {% endif %}
 {% endblock %}

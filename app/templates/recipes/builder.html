@@ -7,54 +7,54 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 id="recipe-name" class="mb-0">{{ recipe.name }}</h1>
+    <h1 id="recipe-name" class="mb-0"><span class="brew-mug">🍺</span> {{ recipe.name }}</h1>
     <div>
-        <a href="{{ url_for('recipes.detail', recipe_id=recipe.id) }}" class="btn btn-outline-secondary btn-sm">View Details</a>
+        <a href="{{ url_for('recipes.detail', recipe_id=recipe.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye me-1"></i>View Details</a>
     </div>
 </div>
 
 <!-- Stats Bar -->
 <div class="row g-2 mb-4" id="stats-bar">
     <div class="col">
-        <div class="card text-center">
+        <div class="card text-center stat-card">
             <div class="card-body py-2">
-                <div class="text-muted small">OG</div>
+                <div class="text-muted small"><i class="bi bi-droplet-fill me-1"></i>OG</div>
                 <div class="fw-bold fs-5" id="stat-og">{{ '%.3f'|format(recipe.og or 1.0) }}</div>
                 <div class="small" id="stat-og-range"></div>
             </div>
         </div>
     </div>
     <div class="col">
-        <div class="card text-center">
+        <div class="card text-center stat-card">
             <div class="card-body py-2">
-                <div class="text-muted small">FG</div>
+                <div class="text-muted small"><i class="bi bi-droplet me-1"></i>FG</div>
                 <div class="fw-bold fs-5" id="stat-fg">{{ '%.3f'|format(recipe.fg or 1.0) }}</div>
                 <div class="small" id="stat-fg-range"></div>
             </div>
         </div>
     </div>
     <div class="col">
-        <div class="card text-center">
+        <div class="card text-center stat-card">
             <div class="card-body py-2">
-                <div class="text-muted small">ABV</div>
+                <div class="text-muted small"><i class="bi bi-lightning-charge-fill me-1"></i>ABV</div>
                 <div class="fw-bold fs-5" id="stat-abv">{{ '%.1f'|format(recipe.abv or 0) }}%</div>
                 <div class="small" id="stat-abv-range"></div>
             </div>
         </div>
     </div>
     <div class="col">
-        <div class="card text-center">
+        <div class="card text-center stat-card">
             <div class="card-body py-2">
-                <div class="text-muted small">IBU</div>
+                <div class="text-muted small">🌿 IBU</div>
                 <div class="fw-bold fs-5" id="stat-ibu">{{ '%.0f'|format(recipe.ibu or 0) }}</div>
                 <div class="small" id="stat-ibu-range"></div>
             </div>
         </div>
     </div>
     <div class="col">
-        <div class="card text-center">
+        <div class="card text-center stat-card">
             <div class="card-body py-2">
-                <div class="text-muted small">SRM</div>
+                <div class="text-muted small">🎨 SRM</div>
                 <div class="fw-bold fs-5" id="stat-srm">{{ '%.0f'|format(recipe.srm or 0) }}</div>
                 <div id="srm-swatch" class="rounded mt-1" style="height: 12px;"></div>
             </div>
@@ -65,7 +65,7 @@
 <!-- Recipe Settings -->
 <div class="card mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Recipe Settings</h5>
+        <h5 class="mb-0"><i class="bi bi-sliders me-2"></i>Recipe Settings</h5>
     </div>
     <div class="card-body">
         <div class="row g-3">
@@ -106,14 +106,14 @@
 <!-- Fermentables -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Fermentables</h5>
+        <h5 class="mb-0">🌾 Fermentables</h5>
         <div class="d-flex gap-2">
             <select class="form-select form-select-sm" id="add-fermentable-select" style="width: auto">
                 {% for f in fermentables %}
                 <option value="{{ f.id }}">{{ f.name }}</option>
                 {% endfor %}
             </select>
-            <button class="btn btn-sm btn-primary" id="add-fermentable-btn">Add</button>
+            <button class="btn btn-sm btn-primary" id="add-fermentable-btn"><i class="bi bi-plus-lg"></i> Add</button>
         </div>
     </div>
     <div class="card-body p-0">
@@ -149,14 +149,14 @@
 <!-- Hops -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Hops</h5>
+        <h5 class="mb-0">🌿 Hops</h5>
         <div class="d-flex gap-2">
             <select class="form-select form-select-sm" id="add-hop-select" style="width: auto">
                 {% for h in hops %}
                 <option value="{{ h.id }}">{{ h.name }} ({{ h.alpha_acid }}% AA)</option>
                 {% endfor %}
             </select>
-            <button class="btn btn-sm btn-primary" id="add-hop-btn">Add</button>
+            <button class="btn btn-sm btn-primary" id="add-hop-btn"><i class="bi bi-plus-lg"></i> Add</button>
         </div>
     </div>
     <div class="card-body p-0">
@@ -194,8 +194,8 @@
 <!-- Adjuncts -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Adjuncts</h5>
-        <button class="btn btn-sm btn-primary" id="add-adjunct-btn">Add Adjunct</button>
+        <h5 class="mb-0">🍒 Adjuncts <span class="text-muted small">(fruit, spices, coffee, nibs, etc.)</span></h5>
+        <button class="btn btn-sm btn-primary" id="add-adjunct-btn"><i class="bi bi-plus-lg"></i> Add Adjunct</button>
     </div>
     <div class="card-body p-0">
         <table class="table table-sm mb-0">
@@ -212,19 +212,50 @@
                 <tr data-id="{{ adj.id }}">
                     <td>{{ adj.name }}</td>
                     <td>{{ adj.amount }}</td>
-                    <td>{{ adj.add_time }}</td>
+                    <td>{{ adj.display_when }}</td>
                     <td><button class="btn btn-sm btn-outline-danger adj-delete">&times;</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <div id="adjunct-form" class="p-3 border-top" style="display: none;">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Name</label>
+                    <input type="text" class="form-control form-control-sm" id="adj-name" placeholder="e.g. Cacao nibs">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">Amount</label>
+                    <input type="text" class="form-control form-control-sm" id="adj-amount" placeholder="e.g. 2 oz">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Stage</label>
+                    <select class="form-select form-select-sm" id="adj-stage">
+                        <option value="mash">Mash / Steep</option>
+                        <option value="boil" selected>Boil</option>
+                        <option value="flameout">Flameout</option>
+                        <option value="primary">Primary</option>
+                        <option value="secondary">Secondary</option>
+                        <option value="bottling">Bottling</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-1" id="adj-time-label">Min remaining</label>
+                    <input type="number" class="form-control form-control-sm" id="adj-time" min="0" step="1" placeholder="optional">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-1">
+                    <button class="btn btn-sm btn-success flex-grow-1" id="adj-save">Add</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="adj-cancel">&times;</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Batch Scaling -->
 <div class="card mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Scale Recipe</h5>
+        <h5 class="mb-0"><i class="bi bi-arrows-angle-expand me-2"></i>Scale Recipe</h5>
     </div>
     <div class="card-body">
         <p class="text-muted small mb-3">Scale all ingredient amounts to a different batch size. This updates the actual recipe — all fermentable and hop amounts will be adjusted proportionally.</p>
@@ -258,7 +289,7 @@
 <!-- Fermentation Profile -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Fermentation Profile</h5>
+        <h5 class="mb-0"><i class="bi bi-thermometer-half me-2"></i>Fermentation Profile</h5>
         <button class="btn btn-sm btn-primary" id="add-waypoint-btn">Add Waypoint</button>
     </div>
     <div class="card-body">

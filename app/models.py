@@ -121,6 +121,17 @@ class RecipeHop(db.Model):
     hop = db.relationship("Hop", lazy=True)
 
 
+ADJUNCT_STAGES = ("mash", "boil", "flameout", "primary", "secondary", "bottling")
+ADJUNCT_STAGE_LABELS = {
+    "mash": "Mash",
+    "boil": "Boil",
+    "flameout": "Flameout",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "bottling": "Bottling",
+}
+
+
 class RecipeAdjunct(db.Model):
     __tablename__ = "recipe_adjuncts"
 
@@ -128,5 +139,15 @@ class RecipeAdjunct(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id"), nullable=False)
     name = db.Column(db.String(120))
     amount = db.Column(db.String(60))  # free-text: "1 oz", "1 bean"
-    add_time = db.Column(db.String(60))  # "boil 15 min", "secondary 5 days"
+    stage = db.Column(db.String(40), default="boil")
+    time_value = db.Column(db.Integer)  # minutes for mash/boil/flameout, days for primary/secondary/bottling
     notes = db.Column(db.Text)
+
+    @property
+    def display_when(self):
+        label = ADJUNCT_STAGE_LABELS.get(self.stage, self.stage or "")
+        if self.time_value is None:
+            return label
+        if self.stage in ("mash", "boil", "flameout"):
+            return f"{label} ({self.time_value} min)"
+        return f"{label} (day {self.time_value})"

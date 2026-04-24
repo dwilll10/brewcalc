@@ -6,6 +6,7 @@ from ..extensions import db
 from ..models import (
     Recipe, RecipeFermentable, RecipeHop, RecipeAdjunct,
     Fermentable, Hop, Yeast, Style,
+    ADJUNCT_STAGES,
 )
 from ..calc import calc_og, calc_fg, calc_ibu, calc_srm, calc_abv
 
@@ -236,11 +237,25 @@ def api_add_adjunct(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     data = request.get_json()
 
+    stage = data.get("stage", "boil")
+    if stage not in ADJUNCT_STAGES:
+        stage = "boil"
+
+    time_value = data.get("time_value")
+    if time_value in ("", None):
+        time_value = None
+    else:
+        try:
+            time_value = int(time_value)
+        except (TypeError, ValueError):
+            time_value = None
+
     adj = RecipeAdjunct(
         recipe_id=recipe.id,
         name=data["name"],
         amount=data.get("amount", ""),
-        add_time=data.get("add_time", ""),
+        stage=stage,
+        time_value=time_value,
         notes=data.get("notes", ""),
     )
     db.session.add(adj)
@@ -370,7 +385,9 @@ def _recipe_stats_json(recipe):
                 "id": adj.id,
                 "name": adj.name,
                 "amount": adj.amount,
-                "add_time": adj.add_time,
+                "stage": adj.stage,
+                "time_value": adj.time_value,
+                "display_when": adj.display_when,
             }
             for adj in recipe.adjuncts
         ],

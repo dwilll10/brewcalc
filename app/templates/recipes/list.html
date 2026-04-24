@@ -3,24 +3,24 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Recipes</h1>
-    <a href="{{ url_for('recipes.new_recipe') }}" class="btn btn-primary">New Recipe</a>
+    <h1><span class="brew-mug">🍺</span> Recipes</h1>
+    <a href="{{ url_for('recipes.new_recipe') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>New Recipe</a>
 </div>
 
 {% if recipes %}
 <div class="table-responsive">
-    <table class="table table-hover">
+    <table class="table table-hover recipe-table">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Style</th>
-                <th>Batch</th>
-                <th>OG</th>
-                <th>FG</th>
-                <th>ABV</th>
-                <th>IBU</th>
-                <th>SRM</th>
-                <th>Updated</th>
+                <th><i class="bi bi-cup-hot-fill me-1 text-warning"></i>Name</th>
+                <th><i class="bi bi-bookmark-star me-1"></i>Style</th>
+                <th><i class="bi bi-bucket me-1"></i>Batch</th>
+                <th title="Original Gravity"><i class="bi bi-droplet-fill me-1"></i>OG</th>
+                <th title="Final Gravity"><i class="bi bi-droplet me-1"></i>FG</th>
+                <th title="Alcohol by Volume"><i class="bi bi-lightning-charge-fill me-1"></i>ABV</th>
+                <th title="International Bittering Units">🌿 IBU</th>
+                <th title="Standard Reference Method — color">🎨 SRM</th>
+                <th><i class="bi bi-calendar3 me-1"></i>Updated</th>
             </tr>
         </thead>
         <tbody>
@@ -45,9 +45,10 @@
     </table>
 </div>
 {% else %}
-<div class="text-center py-5">
-    <p class="text-muted fs-5">No recipes yet. Create your first brew!</p>
-    <a href="{{ url_for('recipes.new_recipe') }}" class="btn btn-primary btn-lg">Create Recipe</a>
+<div class="text-center py-5 empty-state">
+    <div class="empty-mug">🍺</div>
+    <p class="text-muted fs-5 mt-3">No recipes yet. Create your first brew!</p>
+    <a href="{{ url_for('recipes.new_recipe') }}" class="btn btn-primary btn-lg"><i class="bi bi-plus-circle me-1"></i>Create Recipe</a>
 </div>
 {% endif %}
 {% endblock %}

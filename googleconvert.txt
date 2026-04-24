@@ -1,0 +1,112 @@
+# Port BrewCalc to Google Apps Script + Google Sheets
+
+## Context
+
+BrewCalc today is a Flask app: Python/SQLAlchemy/Jinja2, SQLite at `data/brewcalc.db`, Bootstrap 5 templates, a vanilla-JS builder UI, plus a Raspberry Pi fermentation controller at port 5001. Running it requires `python3 run.py` on a machine on the LAN.
+
+The user wants to eliminate the local server and run the whole recipe app from anywhere via Google Apps Script (GAS), using Google Sheets as the database. The Pi fermentation controller will be exposed via a public tunnel (Cloudflare Tunnel or similar) so GAS can still read its dashboard via `UrlFetchApp`.
+
+**Bottom-line effort:** roughly **1.5–2 weeks of focused work** to reach feature parity. The calculation engine is small and ports cleanly; the bulk of the labor is rewriting 13 Jinja templates (1414 LOC) without template inheritance, porting `_generate_steps()` in `brewday.py` (138 lines of nested conditionals), and building a Sheets-backed DAO layer.
+
+**Single hardest piece:** `_generate_steps()` — dense branching over boil hops, flameout hops, dry hops, and now six stages of adjuncts. Direct JS translation; needs manual regression testing.
+
+---
+
+## Target Architecture
+
+```
+GAS project (deployed as Web App)
+├── Code.gs             — doGet(e) router, include() helper, session utils
+├── Data.gs             — SpreadsheetApp DAO + CacheService memoization
+├── Calc.gs             — OG, FG, IBU, SRM, ABV, scaling (port of app/calc/)
+├── BrewDay.gs          — _generateSteps() (port of app/routes/brewday.py:_generate_steps)
+├── Api.gs              — server functions exposed to client via google.script.run
+├── Fermentation.gs     — UrlFetchApp proxy to the tunneled Pi URL
+├── Seed.gs             — one-shot: read bundled JSON → write Sheets tabs
+└── *.html              — 13 templates rewritten for HtmlService
+```
+
+Google Sheet tabs (one per SQLAlchemy table):
+`styles`, `fermentables`, `hops`, `yeasts`, `recipes`, `recipe_fermentables`, `recipe_hops`, `recipe_adjuncts`. Row 1 = header row matching model columns; IDs are `Utilities.getUuid()` strings; `recipe.ferm_profile` stays as a JSON string in a single cell.
+
+Deployment: develop with `clasp` locally for git integration; deploy as Web App → "Execute as Me, Access: Anyone with link" (or restrict to Google account).
+
+---
+
+## Critical source files to mirror
+
+| Source (Python) | Target (GAS) | Notes |
+|---|---|---|
+| `app/calc/gravity.py` (50 LOC) | `Calc.gs` | 2 functions, simple arithmetic — direct port |
+| `app/calc/ibu.py` (46 LOC) | `Calc.gs` | Tinseth — `Math.pow`/`Math.exp`, direct port |
+| `app/calc/color.py` (32 LOC) | `Calc.gs` | Morey — `Math.pow` |
+| `app/calc/abv.py` (16 LOC) | `Calc.gs` | Trivial |
+| `app/calc/scaling.py` (51 LOC) | `Calc.gs` | Calls the above; direct port |
+| `app/models.py` | `Data.gs` (schema) | Table list + column order drives Sheets headers |
+| `app/routes/recipes.py` (394 LOC) | `Api.gs` | Each Flask route → a function callable via `google.script.run` |
+| `app/routes/brewday.py` (225 LOC) | `BrewDay.gs` | `_generate_steps()` is the bulk |
+| `app/routes/admin.py` (210 LOC) | `Api.gs` | Straight CRUD; reuse DAO helpers |
+| `app/routes/fermentation.py` (138 LOC) | `Fermentation.gs` | Replace `requests` with `UrlFetchApp`; base URL from `PropertiesService.getScriptProperties()` |
+| `app/templates/*.html` (13 files, 1414 LOC) | `*.html` in GAS | Replace `{% extends 'base.html' %}` + `{% block content %}` with `<?!= include('header'); ?> … <?!= include('footer'); ?>` |
+| `app/static/js/calculator.js` (527 LOC) | embed in `builder.html` | Swap `fetch('/api/…')` for `google.script.run.withSuccessHandler(cb).fnName(args)` |
+| `app/static/js/timer.js` (62 LOC) | embed in `brewday.html` | Pure client — drop in unchanged |
+| `app/data/*.json` | bundled in `Seed.gs` | One-time populate of Sheets |
+| `seed_data.py` | `Seed.gs` + a one-off Python export script | Also needs to migrate existing SQLite rows |
+
+---
+
+## Work plan (in order)
+
+1. **Bootstrap the GAS project.** Create a new Google Sheet; run `clasp create --type webapp` bound to it. Add Script Property `FERMCTL_URL` (left empty until tunnel is set up). Add `include(name)` helper in `Code.gs`.
+
+2. **Schema + seed.** Write `Data.gs` with `getSheet(name)`, `readAll(name)`, `insert(name, record)`, `update(name, id, patch)`, `delete(name, id)`, `deleteWhere(name, predicate)`. Use `CacheService` to memoize each sheet's rows for 5 minutes. Write `Seed.gs` that creates the 8 tabs with headers and loads the three JSON catalogs. Migrate existing SQLite rows with a one-off Python script that emits CSV per table → paste into the tabs.
+
+3. **Port calculations.** `Calc.gs` mirrors `app/calc/`. Write a small unit-test HTML page that runs a dozen known-answer cases (reuse the inputs from `tests/test_calculations.py`) and asserts via `console.log`. Fast validation before touching routes.
+
+4. **Port brew day step generator.** `BrewDay.gs:generateSteps(recipe)` is a line-for-line port of `_generate_steps()` at `app/routes/brewday.py:35-233`. Include the same six adjunct stages (mash, boil, flameout, primary, secondary, bottling) and the `_fmt_adjunct` helper. Test with a recipe that exercises each stage.
+
+5. **Port routes as `google.script.run` endpoints.** Each Flask route becomes a function in `Api.gs` taking a plain object and returning a plain object (GAS serializes automatically). List: `listRecipes`, `getRecipe(id)`, `createRecipe(body)`, `updateRecipe(id, body)`, `deleteRecipe(id)`, and per-subresource endpoints for fermentables/hops/adjuncts (add/update/delete), `scaleRecipe`, `getFermProfile`, `putFermProfile`, plus admin CRUD for styles/fermentables/hops/yeasts.
+
+6. **Rewrite templates.** For each of the 13 Jinja files, replace inheritance with an `include('header')`/`include('footer')` sandwich. Replace `{{ url_for('recipes.detail', id=r.id) }}` with query-string routes (`?page=detail&id=…`). Replace `<form action="{{ url_for(...) }}" method="post">` with `onsubmit` handlers that call `google.script.run`. Keep Bootstrap CDN links verbatim.
+
+7. **Rewrite client JS.** In `calculator.js`, every `apiCall('/api/…', 'POST', body)` becomes:
+
+   ```js
+   google.script.run.withSuccessHandler(cb).withFailureHandler(errCb).<fnName>(body)
+   ```
+
+   Wrap with a `Promise` shim if the existing code uses `await`. Everything else (DOM manipulation, adjunct form toggle, scaling preset handlers) is unchanged.
+
+8. **Fermentation proxy.** `Fermentation.gs:proxy(path, opts)` reads `FERMCTL_URL` from Script Properties and calls `UrlFetchApp.fetch(base + path, opts)`. Dashboard polls via `google.script.run` at 5–10 s intervals (don't use time-driven triggers — they'd burn quota). User sets up Cloudflare Tunnel separately and pastes the URL into Script Properties.
+
+9. **Migrate data.** One-off Python export script reads `data/brewcalc.db` and writes 8 CSVs ready to paste into the Sheet. Preserve IDs (reuse existing integer IDs as strings) so cross-tab references still link.
+
+10. **Deploy + smoke test.** `clasp push` then `clasp deploy`. Walk through: list recipes → open Raspberry Fruited Sour → verify calculations match — → open builder, add an adjunct via the form, verify it renders on the brew day page → open fermentation page (blank until tunnel is live).
+
+---
+
+## Known limitations to accept or document
+
+- **GAS quotas:** 6 min per request, 30 MB response, 20 K `UrlFetchApp` calls/day. All fine for personal use; do not add background polling triggers for fermentation data.
+- **No hot reload.** GAS Editor + `clasp push` is the inner loop. Plan for slightly slower iteration.
+- **No SQL.** All filtering is in-memory after `readAll()`. Recipe counts in the dozens; this is fine.
+- **Auth model.** Web App is either public-link or Google-account-gated. The Pi tunnel should use Cloudflare Access or a static token check — document this.
+- **Template inheritance lost.** `base.html` becomes `header.html` + `footer.html`. The navbar and Bootstrap assets live in `header.html`.
+
+---
+
+## Verification
+
+End-to-end manual check after each phase:
+
+- **After phase 3 (calc):** open the deployed Web App, hit a hidden `?page=calctest` route that runs 12 known cases from `tests/test_calculations.py`; console should show all pass.
+- **After phase 4 (brew day):** load `?page=brewday&id=<raspberry-sour-id>`; confirm the page lists: steep Flaked Wheat → Hallertau at 15 min → flameout chill → pitch Philly Sour → **"Secondary day 5: add 16 oz Raspberry puree"** at the bottom. Identical to the Flask output.
+- **After phase 7 (builder):** add a boil adjunct with 10 min remaining; confirm it immediately appears in the mid-boil alerts on the brew day page (tests round-trip through Sheets).
+- **After phase 8 (fermentation):** with `FERMCTL_URL` set to the tunneled Pi, the dashboard should render current temp and history chart. Without the property set, the page should show a "controller offline" banner (port the existing offline handling from `app/routes/fermentation.py`).
+- **After phase 10 (deploy):** share the Web App URL with a phone browser not on the LAN; full flow works.
+
+## Out of scope
+
+- Multi-user auth beyond Google's built-in account-gating.
+- Re-implementing the Pi controller itself in GAS (GAS has no hardware access).
+- A reverse migration path back to Flask — one-way port.
